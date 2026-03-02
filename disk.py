@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import pty
 import re
 import select
 import shutil
@@ -185,34 +186,190 @@ def enrich_lsblk(devices: list[Device]) -> None:
 def _health_color(health_str: str) -> str:
     try:
         val = float(health_str)
-        fn  = bgrn if val >= 70 else (ylw if val >= 40 else bred)
+        fn  = bgrn if val >= 90 else bred
         return fn(f"{health_str}%")
     except (ValueError, TypeError):
         return dim(health_str)
 
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+def _visible_len(text: str) -> int:
+    return len(_ANSI_RE.sub("", text))
+
+def _pad(text: str, width: int) -> str:
+    return text + (" " * max(0, width - _visible_len(text)))
+
 def print_table(devices: list[Device], show_health: bool = True) -> None:
+    idx_w, dev_w, size_w, hlth_w, ser_w, mdl_w, slot_w = 4, 12, 8, 8, 22, 20, 4
     _n, _dev, _sz, _hlth, _ser, _mdl = "#", "Device", "Size", "Health", "Serial", "Model"
     print()
     if show_health:
-        print(f"  {bold(f'{_n:<4}')} {bold(f'{_dev:<12}')}  "
-              f"{bold(f'{_sz:<8}')}  {bold(f'{_hlth:<8}')}  "
-              f"{bold(f'{_ser:<22}')}  {bold(f'{_mdl:<20}')}  {bold('Slot')}")
-        print(f"  {'─'*4} {'─'*12}  {'─'*8}  {'─'*8}  {'─'*22}  {'─'*20}  {'─'*4}")
+        print("  " + _pad(bold(_n), idx_w) + " " + _pad(bold(_dev), dev_w) + "  " +
+              _pad(bold(_sz), size_w) + "  " + _pad(bold(_hlth), hlth_w) + "  " +
+              _pad(bold(_ser), ser_w) + "  " + _pad(bold(_mdl), mdl_w) + "  " + _pad(bold("Slot"), slot_w))
+        print(f"  {'─'*idx_w} {'─'*dev_w}  {'─'*size_w}  {'─'*hlth_w}  {'─'*ser_w}  {'─'*mdl_w}  {'─'*slot_w}")
         for i, d in enumerate(devices, 1):
             h_fld    = _health_color(d.health) if d.health not in ("?", "--") else dim(d.health)
             slot_fld = cyn(str(d.slot))
-            print(f"  [{i:<2}] {d.path:<12}  {d.size:<8}  {h_fld:<8}  "
-                  f"{d.serial or 'N/A':<22}  {d.model or 'unknown':<20}  {slot_fld}")
+            print("  " + _pad(f"[{i:<2}]", idx_w) + " " + _pad(d.path, dev_w) + "  " +
+                  _pad(d.size, size_w) + "  " + _pad(h_fld, hlth_w) + "  " +
+                  _pad(d.serial or "N/A", ser_w) + "  " + _pad(d.model or "unknown", mdl_w) + "  " +
+                  _pad(slot_fld, slot_w))
     else:
-        print(f"  {bold(f'{_n:<4}')} {bold(f'{_dev:<12}')}  "
-              f"{bold(f'{_sz:<8}')}  {bold(f'{_ser:<22}')}  "
-              f"{bold(f'{_mdl:<20}')}  {bold('Slot')}")
-        print(f"  {'─'*4} {'─'*12}  {'─'*8}  {'─'*22}  {'─'*20}  {'─'*4}")
+        print("  " + _pad(bold(_n), idx_w) + " " + _pad(bold(_dev), dev_w) + "  " +
+              _pad(bold(_sz), size_w) + "  " + _pad(bold(_ser), ser_w) + "  " +
+              _pad(bold(_mdl), mdl_w) + "  " + _pad(bold("Slot"), slot_w))
+        print(f"  {'─'*idx_w} {'─'*dev_w}  {'─'*size_w}  {'─'*ser_w}  {'─'*mdl_w}  {'─'*slot_w}")
         for i, d in enumerate(devices, 1):
             slot_fld = cyn(str(d.slot))
-            print(f"  [{i:<2}] {d.path:<12}  {d.size:<8}  "
-                  f"{d.serial or 'N/A':<22}  {d.model or 'unknown':<20}  {slot_fld}")
+            print("  " + _pad(f"[{i:<2}]", idx_w) + " " + _pad(d.path, dev_w) + "  " +
+                  _pad(d.size, size_w) + "  " + _pad(d.serial or "N/A", ser_w) + "  " +
+                  _pad(d.model or "unknown", mdl_w) + "  " + _pad(slot_fld, slot_w))
     print()
+
+def _run_with_progress(cmd: list[str], label: str) -> tuple[int, str, str]:
+    start = time.monotonic()
+    if not _TTY:
+        print(f"  {cyn(label)}", flush=True)
+
+    master_fd, slave_fd = pty.openpty()
+    p = subprocess.Popen(cmd, stdout=slave_fd, stderr=slave_fd, close_fds=True)
+    os.close(slave_fd)
+    os.set_blocking(master_fd, False)
+
+    spins = "|/-\\"
+    i = 0
+    scanned = 0
+    out_chunks: list[bytes] = []
+
+    while True:
+        rc = p.poll()
+        ready, _, _ = select.select([master_fd], [], [], 0.2)
+        for _ in ready:
+            try:
+                chunk = os.read(master_fd, 65536)
+            except BlockingIOError:
+                chunk = b""
+            except OSError:
+                chunk = b""
+            if not chunk:
+                continue
+            out_chunks.append(chunk)
+
+        if out_chunks:
+            cur = b"".join(out_chunks).decode("utf-8", errors="replace")
+            ids = {m.group(1) for m in re.finditer(r"(?:^|\r)Device\s+(\d+)\s*:", cur)}
+            scanned = len(ids)
+
+        elapsed = time.monotonic() - start
+        if _TTY and rc is None:
+            dev_txt = f"{scanned} dev scanned"
+            sys.stdout.write(f"\r  {cyn(label)} {spins[i % len(spins)]} {int(elapsed)}s  {dev_txt}")
+            sys.stdout.flush()
+            i += 1
+
+        if rc is not None:
+            break
+
+    # Drain any remaining PTY bytes after process exit.
+    while True:
+        try:
+            chunk = os.read(master_fd, 65536)
+        except (BlockingIOError, OSError):
+            break
+        if not chunk:
+            break
+        out_chunks.append(chunk)
+    os.close(master_fd)
+
+    if _TTY:
+        dev_txt = f"{scanned} dev scanned"
+        sys.stdout.write(f"\r  {cyn(label)} done in {fmt_duration(time.monotonic() - start)}  {dev_txt}{' ' * 8}\n")
+        sys.stdout.flush()
+    else:
+        print(f"  {dim(f'done in {fmt_duration(time.monotonic() - start)}')}")
+
+    out = b"".join(out_chunks).decode("utf-8", errors="replace")
+    err = ""
+    return p.returncode or 0, out, err
+
+def _slot_for_path(path: str, devices: list[Device]) -> int | str:
+    for d in devices:
+        if path in (d.port, d.path):
+            return d.slot
+    return "?"
+
+def _parse_hdsentinel_health(output: str, devices: list[Device]) -> None:
+    """Populate per-device health from HDSentinel text output."""
+    by_key: dict[str, Device] = {}
+    for d in devices:
+        by_key[d.port] = d
+        by_key[d.path] = d
+
+    pat = re.compile(
+        r"(?ms)^HDD Device\s+\d+:\s+(?P<path>\S+)\n(?P<body>.*?)(?=^HDD Device\s+\d+:|\Z)"
+    )
+    for m in pat.finditer(output):
+        path = m.group("path").strip()
+        body = m.group("body")
+        dev = by_key.get(path)
+        if not dev:
+            continue
+
+        hm = re.search(r"^Health\s*:\s*(.+?)\s*%\s*$", body, re.M)
+        if hm:
+            raw = hm.group(1).strip()
+            vm = re.search(r"(\d+(?:\.\d+)?)", raw)
+            dev.health = vm.group(1) if vm else raw
+            continue
+
+        hm2 = re.search(r"(?im)^.*\bHealth\b.*:\s*.*?(\d+(?:\.\d+)?)\s*%", body)
+        if hm2:
+            dev.health = hm2.group(1)
+            continue
+
+        unk = re.search(r"(?im)^.*\bHealth\b.*:\s*\?\s*\(Unknown\)", body)
+        dev.health = "Unknown" if unk else "?"
+
+    # Dump mode uses "Hard Disk Device ... : PATH" inside per-disk sections.
+    block_pat = re.compile(
+        r"(?ms)^  -- Physical Disk Information - Disk:.*?\n(?P<body>.*?)(?=^  -- Physical Disk Information - Disk:|^  -- Partition Information --|\Z)"
+    )
+    for bm in block_pat.finditer(output):
+        body = bm.group("body")
+        pm = re.search(r"(?m)^\s*Hard Disk Device.*:\s*(?P<path>/\S+)\s*$", body)
+        if not pm:
+            continue
+        path = pm.group("path").strip()
+        dev = by_key.get(path)
+        if not dev:
+            continue
+
+        hm = re.search(r"(?im)^.*\bHealth\b.*:\s*.*?(\d+(?:\.\d+)?)\s*%", body)
+        if hm:
+            dev.health = hm.group(1)
+            continue
+
+        unk = re.search(r"(?im)^.*\bHealth\b.*:\s*\?\s*\(Unknown\)", body)
+        dev.health = "Unknown" if unk else dev.health
+
+def _rewrite_hdsentinel_with_slots(output: str, devices: list[Device]) -> str:
+    """Relabel HDSentinel device lines to include physical slot numbers."""
+    def repl_dev(m: re.Match[str]) -> str:
+        prefix, path = m.group(1), m.group(2)
+        slot = _slot_for_path(path, devices)
+        return f"{prefix}slot {slot}: {path}"
+
+    out = re.sub(r"(?m)^(HDD Device\s+)\d+:\s+(\S+)", repl_dev, output)
+    out = re.sub(r"(^|\r)(Device\s+)\d+(\s*:\s+)(\S+)",
+                 lambda m: f"{m.group(1)}{m.group(2)}slot {_slot_for_path(m.group(4), devices)}{m.group(3)}{m.group(4)}",
+                 out)
+    out = re.sub(
+        r"(?m)^(\s*Hard Disk Device.*:\s*)(/\S+)\s*$",
+        lambda m: f"{m.group(1)}{m.group(2)}  (Slot {_slot_for_path(m.group(2), devices)})",
+        out,
+    )
+    return out
 
 def pick_devices(devices: list[Device], prompt: str) -> list[Device]:
     raw = prompt_input(prompt).strip()
@@ -240,10 +397,32 @@ def cmd_health(args: argparse.Namespace) -> bool:
 
     enrich_lsblk(devices)
 
-    print(f"  {cyn('HDSentinel scan ...')}", flush=True)
-    devlist = ",".join(d.path for d in devices)
-    flags   = ["-dump"] if args.dump else []
-    subprocess.run([HDSENTINEL, "-onlydevs", devlist] + flags)
+    # Use stable PHY by-path symlinks for HDSentinel device targeting.
+    devlist = ",".join(d.port for d in devices)
+    # Always use dump internally for stable machine parsing of health fields.
+    flags   = ["-dump"]
+    cmd = [HDSENTINEL, "-onlydevs", devlist] + flags
+
+    if args.raw:
+        print(f"  {cyn('HDSentinel scan (raw) ...')}", flush=True)
+        run = subprocess.run(cmd)
+        if run.returncode != 0:
+            print(ylw(f"HDSentinel exited with code {run.returncode}"))
+        return True
+
+    rc, out, err = _run_with_progress(cmd, "HDSentinel scan ...")
+    _parse_hdsentinel_health(out, devices)
+    print_table(devices, show_health=True)
+
+    if args.dump:
+        rewritten = _rewrite_hdsentinel_with_slots(out, devices)
+        if rewritten.strip():
+            print(rewritten, end="" if rewritten.endswith("\n") else "\n")
+    if err.strip():
+        print(err, end="" if err.endswith("\n") else "\n")
+
+    if rc != 0:
+        print(ylw(f"HDSentinel exited with code {rc}"))
     return True
 
 def cmd_format(args: argparse.Namespace) -> bool:
@@ -640,13 +819,53 @@ def cmd_speedtest(args: argparse.Namespace) -> bool:
     log("SPEEDTEST " + " ".join(f"slot={d.slot} read={spd}" for d, spd in results))
     return True
 
+def cmd_missing(args: argparse.Namespace) -> bool:
+    devices = discover()
+    enrich_lsblk(devices)
+    by_port = {d.port: d for d in devices}
+    ordered_ports = sorted(PORTS, key=lambda p: PORT_TO_SLOT.get(p, 999))
+
+    slot_w, phy_w, st_w, dev_w, ser_w, mdl_w = 4, 3, 8, 12, 22, 20
+    print()
+    print(f"  {bold('Expected PHY/SLOT status:')}")
+    print("  " + _pad(bold("Slot"), slot_w) + "  " + _pad(bold("PHY"), phy_w) + "  " +
+          _pad(bold("Status"), st_w) + "   " + _pad(bold("Device"), dev_w) + "  " +
+          _pad(bold("Serial"), ser_w) + "  " + _pad(bold("Model"), mdl_w))
+    print(f"  {'─'*slot_w}  {'─'*phy_w}  {'─'*st_w}   {'─'*dev_w}  {'─'*ser_w}  {'─'*mdl_w}")
+
+    missing: list[tuple[int | str, str]] = []
+    for port in ordered_ports:
+        slot = PORT_TO_SLOT.get(port, "?")
+        m = re.search(r"-phy(\d+)-", port)
+        phy = m.group(1) if m else "?"
+        dev = by_port.get(port)
+        if dev:
+            print("  " + _pad(str(slot), slot_w) + "  " + _pad(phy, phy_w) + "  " +
+                  _pad(bgrn("PRESENT"), st_w) + "   " + _pad(dev.path, dev_w) + "  " +
+                  _pad(dev.serial or "N/A", ser_w) + "  " + _pad(dev.model or "unknown", mdl_w))
+        else:
+            print("  " + _pad(str(slot), slot_w) + "  " + _pad(phy, phy_w) + "  " +
+                  _pad(bred("MISSING"), st_w) + "   " + _pad("-", dev_w) + "  " +
+                  _pad("-", ser_w) + "  " + _pad("-", mdl_w))
+            missing.append((slot, port))
+
+    print()
+    if missing:
+        missing_slots = ", ".join(str(slot) for slot, _ in sorted(missing, key=lambda x: (x[0] if isinstance(x[0], int) else 999)))
+        print(f"  {bred(f'Missing: {len(missing)} slot(s): {missing_slots}')}")
+        log(f"MISSING_SLOTS count={len(missing)} slots={missing_slots}")
+    else:
+        print(f"  {bgrn('All expected slots are present.')}")
+        log("MISSING_SLOTS count=0")
+    return True
 
 def main_menu() -> None:
     MENU = [
-        ("Health check",            cmd_health,     argparse.Namespace(dump=False)),
+        ("Health check",            cmd_health,     argparse.Namespace(dump=False, raw=False)),
         ("Format disks",            cmd_format,     argparse.Namespace(fast=False)),
         ("Monitor format progress", cmd_progress,   argparse.Namespace(devices=[])),
         ("Speed test",              cmd_speedtest,  argparse.Namespace()),
+        ("Show missing slots",      cmd_missing,    argparse.Namespace()),
     ]
 
     while True:
@@ -692,6 +911,7 @@ def main() -> None:
 
     p_health = sub.add_parser("health",   help="Show disk health via HDSentinel")
     p_health.add_argument("--dump", action="store_true", help="Full detailed report")
+    p_health.add_argument("--raw", action="store_true", help="Show raw HDSentinel output (original behavior)")
 
     p_fmt = sub.add_parser("format",   help="Interactive low-level format (512-byte sectors)")
     p_fmt.add_argument("--fast", action="store_true",
@@ -702,6 +922,7 @@ def main() -> None:
                         help="Devices to monitor (omit for interactive selection)")
 
     sub.add_parser("speedtest", help="Read/write speed test (1 GiB per disk)")
+    sub.add_parser("missing", help="Show expected PHY slots and highlight missing disks")
 
     args = parser.parse_args()
 
@@ -709,7 +930,13 @@ def main() -> None:
         main_menu()
         return
 
-    dispatch = {"health": cmd_health, "format": cmd_format, "progress": cmd_progress, "speedtest": cmd_speedtest}
+    dispatch = {
+        "health": cmd_health,
+        "format": cmd_format,
+        "progress": cmd_progress,
+        "speedtest": cmd_speedtest,
+        "missing": cmd_missing,
+    }
     dispatch[args.cmd](args)
 
 if __name__ == "__main__":
