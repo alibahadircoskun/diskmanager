@@ -1,4 +1,4 @@
-# diskman_priv
+# diskmanager
 
 Disk management tool for SAS/SATA shelves using fixed PHY paths.
 

@@ -7,9 +7,8 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-# Resolve the directory this script lives in so disk.py is found
-# regardless of where the repo was cloned
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="/root/diskmanager"
+DISK_PY="${REPO_DIR}/disk.py"
 
 echo "Installing dependencies for disk.py..."
 
@@ -38,8 +37,14 @@ else
     echo "HDSentinel already installed, skipping."
 fi
 
-# Make disk.py runnable as 'disk' from anywhere
-chmod +x "${SCRIPT_DIR}/disk.py"
-ln -sf "${SCRIPT_DIR}/disk.py" /usr/local/bin/disk
+if [ ! -f "${DISK_PY}" ]; then
+    echo "Expected script not found: ${DISK_PY}"
+    echo "Clone/copy the repo to /root/diskmanager first."
+    exit 1
+fi
+
+# Use repo copy as single source of truth.
+chmod +x "${DISK_PY}"
+ln -sf "${DISK_PY}" /usr/local/bin/disk
 
 echo "Done. Run 'disk' to start."
