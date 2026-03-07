@@ -49,18 +49,20 @@ def log(msg: str) -> None:
     _log.info(msg)
 
 _TTY = sys.stdout.isatty()
-GRN = "\033[32m"; BGRN = "\033[1;32m"; YLW = "\033[33m"; BYLW = "\033[1;33m"; RED = "\033[31m"
-CYN = "\033[36m"; BCYN = "\033[1;36m"; WHT = "\033[37m"; RST = "\033[0m"
 
 def _a(code: str, t: str) -> str:
     return f"\033[{code}m{t}\033[0m" if _TTY else t
 
-def bold(t: str) -> str: return _a("1", t)
-def dim(t: str) -> str:  return _a("2", t)
-def ylw(t: str) -> str:  return _a("33", t)
-def cyn(t: str) -> str:  return _a("36", t)
+def bold(t: str) -> str: return _a("1",    t)
+def dim(t: str)  -> str: return _a("2",    t)
+def grn(t: str)  -> str: return _a("32",   t)
+def ylw(t: str)  -> str: return _a("33",   t)
+def cyn(t: str)  -> str: return _a("36",   t)
+def wht(t: str)  -> str: return _a("37",   t)
+def red(t: str)  -> str: return _a("31",   t)
 def bred(t: str) -> str: return _a("1;31", t)
 def bgrn(t: str) -> str: return _a("1;32", t)
+def bylw(t: str) -> str: return _a("1;33", t)
 def bcyn(t: str) -> str: return _a("1;36", t)
 
 def prompt_input(prompt: str) -> str:
@@ -78,7 +80,7 @@ def prompt_input(prompt: str) -> str:
         while True:
             ch = os.read(fd, 1)
             if ch in (b"\r", b"\n"):
-                sys.stdout.write("\n")
+                sys.stdout.write("\r\n")
                 sys.stdout.flush()
                 break
             if ch in (b"\x7f", b"\x08"):  # DEL or Ctrl+H
@@ -135,13 +137,15 @@ def sg_device(dev_path: str) -> str:
 
 class Device:
     def __init__(self, path: str, port: str):
-        self.path   = path
-        self.port   = port
-        self.slot   = PORT_TO_SLOT.get(port, "?")
-        self.model  = ""
-        self.serial = ""
-        self.health = "?"
-        self.size   = ""
+        self.path       = path
+        self.port       = port
+        self.slot       = PORT_TO_SLOT.get(port, "?")
+        self.model      = ""
+        self.serial     = ""
+        self.health     = "?"
+        self.size       = ""
+        self.fmt_status = ""  # logical block size in bytes, e.g. "512", "520", "528"
+        self.zeroed     = ""  # "zero" if disk is zeroed, "data" if not, "" if unknown
 
     def __str__(self) -> str:
         return self.path
@@ -183,6 +187,78 @@ def enrich_lsblk(devices: list[Device]) -> None:
                 if m:
                     dev.serial = m.group(1)
 
+def _is_disk_zeroed(dev_path: str, sample_count: int = 3) -> str:
+    """Sample a disk to check if it's been zeroed. Returns 'zero', 'data', or ''."""
+    try:
+        # Get disk size
+        r = subprocess.run(["blockdev", "--getsize64", dev_path],
+                          capture_output=True, text=True, timeout=5)
+        total_bytes = int(r.stdout.strip())
+        if total_bytes == 0:
+            return ""
+
+        # Sample from start and middle (not end, as metadata may exist there)
+        sample_size = 4096  # 4KB per sample
+        positions = [
+            0,                              # Start
+            (total_bytes // 2) - sample_size // 2,  # Middle
+        ][:sample_count]
+
+        for pos in positions:
+            pos = max(0, min(pos, total_bytes - sample_size))
+            try:
+                r = subprocess.run(
+                    ["dd", f"if={dev_path}", "of=/dev/stdout", f"skip={pos // 512}",
+                     "bs=512", "count=8", "iflag=direct"],
+                    capture_output=True, timeout=10, stderr=subprocess.DEVNULL
+                )
+                if r.stdout:
+                    # Check if any byte in the sample is non-zero
+                    if any(b != 0 for b in r.stdout):
+                        return "data"
+            except (subprocess.TimeoutExpired, OSError):
+                continue
+
+        return "zero"
+    except (ValueError, OSError, subprocess.TimeoutExpired):
+        return ""
+
+def enrich_fmt_status(devices: list[Device]) -> None:
+    """Populate fmt_status using sg_readcap to read the logical block size."""
+    if not shutil.which("sg_readcap"):
+        return
+    for dev in devices:
+        try:
+            r = subprocess.run(["sg_readcap", dev.path],
+                               capture_output=True, text=True, timeout=5)
+            m = re.search(r"Logical block length=(\d+)\s*bytes", r.stdout + r.stderr, re.I)
+            if m:
+                dev.fmt_status = m.group(1)
+        except (subprocess.TimeoutExpired, OSError):
+            pass
+
+def enrich_zeroed_status(devices: list[Device]) -> None:
+    """Detect if disks have been zeroed by sampling sectors."""
+    for dev in devices:
+        dev.zeroed = _is_disk_zeroed(dev.path)
+
+def _fmt_status_color(status: str, zeroed: str = "") -> str:
+    base = ""
+    if status == "512":
+        base = "512B"
+    elif status:
+        base = f"{status}B"
+    else:
+        base = "?"
+
+    if zeroed == "zero":
+        return bgrn(f"{base}✓")
+    elif zeroed == "data":
+        return ylw(f"{base}✗")
+    elif status:
+        return bgrn(base) if status == "512" else ylw(base)
+    return dim(base)
+
 def _health_color(health_str: str) -> str:
     try:
         val = float(health_str)
@@ -200,34 +276,39 @@ def _pad(text: str, width: int) -> str:
     return text + (" " * max(0, width - _visible_len(text)))
 
 def print_table(devices: list[Device], show_health: bool = True) -> None:
-    idx_w, dev_w, size_w, hlth_w, ser_w, mdl_w, slot_w = 4, 12, 8, 8, 22, 20, 4
-    _n, _dev, _sz, _hlth, _ser, _mdl = "#", "Device", "Size", "Health", "Serial", "Model"
+    idx_w, dev_w, size_w, fmt_w, hlth_w, ser_w, mdl_w, slot_w = 4, 12, 8, 5, 8, 22, 20, 4
     print()
     if show_health:
-        print("  " + _pad(bold(_n), idx_w) + " " + _pad(bold(_dev), dev_w) + "  " +
-              _pad(bold(_sz), size_w) + "  " + _pad(bold(_hlth), hlth_w) + "  " +
-              _pad(bold(_ser), ser_w) + "  " + _pad(bold(_mdl), mdl_w) + "  " + _pad(bold("Slot"), slot_w))
-        print(f"  {'─'*idx_w} {'─'*dev_w}  {'─'*size_w}  {'─'*hlth_w}  {'─'*ser_w}  {'─'*mdl_w}  {'─'*slot_w}")
+        print("  " + _pad(bold("#"), idx_w) + " " + _pad(bold("Device"), dev_w) + "  " +
+              _pad(bold("Size"), size_w) + "  " + _pad(bold("Fmt"), fmt_w) + "  " +
+              _pad(bold("Health"), hlth_w) + "  " + _pad(bold("Serial"), ser_w) + "  " +
+              _pad(bold("Model"), mdl_w) + "  " + _pad(bold("Slot"), slot_w))
+        print(f"  {'─'*idx_w} {'─'*dev_w}  {'─'*size_w}  {'─'*fmt_w}  {'─'*hlth_w}  {'─'*ser_w}  {'─'*mdl_w}  {'─'*slot_w}")
         for i, d in enumerate(devices, 1):
             h_fld    = _health_color(d.health) if d.health not in ("?", "--") else dim(d.health)
+            fmt_fld  = _fmt_status_color(d.fmt_status, d.zeroed)
             slot_fld = cyn(str(d.slot))
             print("  " + _pad(f"[{i:<2}]", idx_w) + " " + _pad(d.path, dev_w) + "  " +
-                  _pad(d.size, size_w) + "  " + _pad(h_fld, hlth_w) + "  " +
+                  _pad(d.size, size_w) + "  " + _pad(fmt_fld, fmt_w) + "  " +
+                  _pad(h_fld, hlth_w) + "  " +
                   _pad(d.serial or "N/A", ser_w) + "  " + _pad(d.model or "unknown", mdl_w) + "  " +
                   _pad(slot_fld, slot_w))
     else:
-        print("  " + _pad(bold(_n), idx_w) + " " + _pad(bold(_dev), dev_w) + "  " +
-              _pad(bold(_sz), size_w) + "  " + _pad(bold(_ser), ser_w) + "  " +
-              _pad(bold(_mdl), mdl_w) + "  " + _pad(bold("Slot"), slot_w))
-        print(f"  {'─'*idx_w} {'─'*dev_w}  {'─'*size_w}  {'─'*ser_w}  {'─'*mdl_w}  {'─'*slot_w}")
+        print("  " + _pad(bold("#"), idx_w) + " " + _pad(bold("Device"), dev_w) + "  " +
+              _pad(bold("Size"), size_w) + "  " + _pad(bold("Fmt"), fmt_w) + "  " +
+              _pad(bold("Serial"), ser_w) + "  " + _pad(bold("Model"), mdl_w) + "  " +
+              _pad(bold("Slot"), slot_w))
+        print(f"  {'─'*idx_w} {'─'*dev_w}  {'─'*size_w}  {'─'*fmt_w}  {'─'*ser_w}  {'─'*mdl_w}  {'─'*slot_w}")
         for i, d in enumerate(devices, 1):
+            fmt_fld  = _fmt_status_color(d.fmt_status, d.zeroed)
             slot_fld = cyn(str(d.slot))
             print("  " + _pad(f"[{i:<2}]", idx_w) + " " + _pad(d.path, dev_w) + "  " +
-                  _pad(d.size, size_w) + "  " + _pad(d.serial or "N/A", ser_w) + "  " +
-                  _pad(d.model or "unknown", mdl_w) + "  " + _pad(slot_fld, slot_w))
+                  _pad(d.size, size_w) + "  " + _pad(fmt_fld, fmt_w) + "  " +
+                  _pad(d.serial or "N/A", ser_w) + "  " + _pad(d.model or "unknown", mdl_w) + "  " +
+                  _pad(slot_fld, slot_w))
     print()
 
-def _run_with_progress(cmd: list[str], label: str) -> tuple[int, str, str]:
+def _run_with_progress(cmd: list[str], label: str, timeout: int = 300) -> tuple[int, str, str]:
     start = time.monotonic()
     if not _TTY:
         print(f"  {cyn(label)}", flush=True)
@@ -241,6 +322,7 @@ def _run_with_progress(cmd: list[str], label: str) -> tuple[int, str, str]:
     i = 0
     scanned = 0
     out_chunks: list[bytes] = []
+    timed_out = False
 
     while True:
         rc = p.poll()
@@ -271,6 +353,12 @@ def _run_with_progress(cmd: list[str], label: str) -> tuple[int, str, str]:
         if rc is not None:
             break
 
+        if elapsed >= timeout:
+            timed_out = True
+            p.kill()
+            p.wait()
+            break
+
     # Drain any remaining PTY bytes after process exit.
     while True:
         try:
@@ -281,6 +369,14 @@ def _run_with_progress(cmd: list[str], label: str) -> tuple[int, str, str]:
             break
         out_chunks.append(chunk)
     os.close(master_fd)
+
+    if timed_out:
+        if _TTY:
+            sys.stdout.write(f"\r  {bred(label + ' TIMED OUT after ' + fmt_duration(timeout))}{' ' * 8}\n")
+            sys.stdout.flush()
+        else:
+            print(f"  {bred(label + ' TIMED OUT after ' + fmt_duration(timeout))}")
+        return 1, b"".join(out_chunks).decode("utf-8", errors="replace"), ""
 
     if _TTY:
         dev_txt = f"{scanned} dev scanned"
@@ -392,10 +488,12 @@ def cmd_health(args: argparse.Namespace) -> bool:
         sys.exit(bred(f"HDSentinel not found at {HDSENTINEL}"))
     devices = discover()
     if not devices:
-        print(ylw("No disks connected on specified ports."))
-        return False
+        print(bred("No disks installed on specified ports."))
+        return True
 
     enrich_lsblk(devices)
+    enrich_fmt_status(devices)
+    enrich_zeroed_status(devices)
 
     # Use stable PHY by-path symlinks for HDSentinel device targeting.
     devlist = ",".join(d.port for d in devices)
@@ -428,10 +526,12 @@ def cmd_health(args: argparse.Namespace) -> bool:
 def cmd_format(args: argparse.Namespace) -> bool:
     devices = discover()
     if not devices:
-        print(ylw("No disks found on specified ports."))
-        return False
+        print(bred("No disks installed on specified ports."))
+        return True
 
     enrich_lsblk(devices)
+    enrich_fmt_status(devices)
+    enrich_zeroed_status(devices)
     print_table(devices, show_health=False)
 
     selected = pick_devices(devices, "Enter device numbers to format (space-separated, 'all', or Enter to cancel): ")
@@ -440,7 +540,7 @@ def cmd_format(args: argparse.Namespace) -> bool:
 
     fast_mode = bool(getattr(args, "fast", False))
     if not fast_mode:
-        mode_in = input(bold("Format mode: [n]ormal (default) or [f]ast: ")).strip().lower()
+        mode_in = prompt_input("  Format mode: [n]ormal (default) or [f]ast: ").strip().lower()
         if mode_in in ("f", "fast"):
             fast_mode = True
 
@@ -500,9 +600,11 @@ def cmd_format(args: argparse.Namespace) -> bool:
 def cmd_progress(args: argparse.Namespace) -> bool:
     devices = discover()
     if not devices:
-        print(ylw("No disks found on specified ports."))
-        return False
+        print(bred("No disks installed on specified ports."))
+        return True
     enrich_lsblk(devices)
+    enrich_fmt_status(devices)
+    enrich_zeroed_status(devices)
 
     if args.devices:
         by_path = {d.path: d for d in devices}
@@ -568,8 +670,21 @@ class DevState:
         return time.monotonic() - self.start
 
 def _poll(state: DevState) -> None:
-    if state.status in ("done", "failed"):
+    if state.status in ("done", "failed", "lost"):
         return
+
+    # Detect device disappearance.
+    if not Path(state.path).exists():
+        state.status = "lost"
+        log(f"FORMAT_LOST slot={state.slot} dev={state.path} model={state.model} serial={state.serial}")
+        return
+
+    # Detect format startup failure: still waiting after 30s with no progress ever seen.
+    if state.status == "waiting" and not state.ever_started and state.elapsed > 30:
+        state.status = "failed"
+        log(f"FORMAT_START_FAILED slot={state.slot} dev={state.path} model={state.model} serial={state.serial}")
+        return
+
     poll_dev = state.sg_path
     outputs: list[str] = []
     for cmd in (
@@ -579,7 +694,7 @@ def _poll(state: DevState) -> None:
         try:
             r = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             outputs.append((r.stdout or "") + (r.stderr or ""))
-        except subprocess.TimeoutExpired:
+        except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
             continue
 
     if not outputs:
@@ -636,74 +751,84 @@ def _progress_ui(devices: list[Device]) -> None:
             return "\r" + _vis_trunc(content, cols - 1) + "\033[K\n"
 
         def _divider() -> str:
-            return _L(f"{CYN}{'─' * (cols - 1)}{RST}")
+            return _L(cyn('─' * (cols - 1)))
 
         ts = time.strftime("%Y-%m-%d  %H:%M:%S")
-        out.append(_L(f"{BCYN}sg_format Progress Monitor{RST}   {WHT}{ts}{RST}"))
+        out.append(_L(f"{bcyn('sg_format Progress Monitor')}   {wht(ts)}"))
         out.append(_divider())
+
+        # Fixed column widths (visible chars). Total fixed overhead = 105 + bar_w:
+        # 2 + (12+1) + (7+1) + (22+1) + (10+1) + (bar_w+2+1) + (7+1) + (20+1) + 16
+        C_PATH, C_SLOT, C_SER, C_LABEL, C_PCT, C_EL, C_ETA = 12, 7, 22, 10, 7, 20, 16
+        bar_w = max(4, min(40, cols - 105))
+
+        hdr = (f"  {'Device':<{C_PATH}} {'Slot':<{C_SLOT}} {'Serial':<{C_SER}}"
+               f" {'Status':<{C_LABEL}} {'Progress':^{bar_w + 2}} {'%':>{C_PCT}}"
+               f" {'Elapsed':<{C_EL}} {'ETA':<{C_ETA}}")
+        out.append(_L(dim(hdr)))
+        sub = (f"  {'─' * C_PATH} {'─' * C_SLOT} {'─' * C_SER} {'─' * C_LABEL}"
+               f" {'─' * (bar_w + 2)} {'─' * C_PCT} {'─' * C_EL} {'─' * C_ETA}")
+        out.append(_L(cyn(sub)))
 
         for s in states:
             elapsed_str = fmt_duration(s.elapsed)
 
             if s.status == "done":
-                col      = BGRN
-                label    = "done"
-                pct_str  = "100.00%"
+                col_fn, label, pct_str = bgrn, "done",       "100.00%"
             elif s.status == "failed":
-                col      = RED
-                label    = "FAILED"
-                pct_str  = "  0.00%"
+                col_fn, label, pct_str = bred, "FAILED",     "  0.00%"
+            elif s.status == "lost":
+                col_fn, label, pct_str = bred, "LOST",       "       "
             elif s.status == "waiting":
-                col      = WHT
-                label    = "waiting"
-                pct_str  = ""
+                col_fn, label, pct_str = wht,  "waiting",    "       "
             else:
-                col      = BGRN if s.progress >= 50 else BYLW
-                label    = "formatting"
-                pct_str  = f"{s.progress:6.2f}%"
-            slot_str    = f"Slot {s.slot}"
-            serial_str  = f"SN:{s.serial or 'N/A'}"
-            left_prefix = f"  {s.path}  {slot_str}  {serial_str}  {label}  "
-            right_info  = f"  Elapsed: {elapsed_str}"
-            if s.status == "formatting" and s.eta != "--":
-                right_info += f"  ETA: {s.eta}"
+                col_fn  = bgrn if s.progress >= 50 else bylw
+                label   = "formatting"
+                pct_str = f"{s.progress:6.2f}%"
 
-            if s.status == "formatting":
-                fixed_visible = len(left_prefix) + 2 + 1 + len(pct_str) + len(right_info)
-                bar_width     = max(8, min(48, cols - fixed_visible - 2))
-                filled        = int(s.progress * bar_width / 100)
-                bar           = "#" * filled + "." * (bar_width - filled)
-                body          = f"{left_prefix}[{bar}] {pct_str}{right_info}"
-            else:
-                body = f"{left_prefix}{right_info.lstrip()}"
+            eta_str = f"ETA: {s.eta}" if s.status == "formatting" and s.eta != "--" else ""
 
-            out.append(_L(f"{col}{body}{RST}"))
+            path_f  = s.path[:C_PATH].ljust(C_PATH)
+            slot_f  = f"Slot {s.slot}"[:C_SLOT].ljust(C_SLOT)
+            ser_f   = f"SN:{s.serial or 'N/A'}"[:C_SER].ljust(C_SER)
+            label_f = label[:C_LABEL].ljust(C_LABEL)
+            pct_f   = pct_str.rjust(C_PCT)
+            el_f    = f"Elapsed: {elapsed_str}"[:C_EL].ljust(C_EL)
+            eta_f   = eta_str[:C_ETA].ljust(C_ETA)
+
+            filled  = int(s.progress * bar_w / 100)
+            bar_str = "#" * filled + "." * (bar_w - filled)
+
+            body = (f"  {path_f} {slot_f} {ser_f} {label_f}"
+                    f" [{bar_str}] {pct_f} {el_f} {eta_f}")
+            out.append(_L(col_fn(body)))
 
         out.append(_divider())
 
         n_done = sum(1 for s in states if s.status == "done")
         n_fail = sum(1 for s in states if s.status == "failed")
+        n_lost = sum(1 for s in states if s.status == "lost")
         n_fmt  = sum(1 for s in states if s.status == "formatting")
         n_wait = sum(1 for s in states if s.status == "waiting")
         parts: list[str] = []
-        if n_done: parts.append(f"{BGRN}{n_done} done{RST}")
-        if n_fmt:  parts.append(f"{GRN}{n_fmt} formatting{RST}")
-        if n_wait: parts.append(f"{WHT}{n_wait} waiting{RST}")
-        if n_fail: parts.append(f"{RED}{n_fail} failed{RST}")
+        if n_done: parts.append(bgrn(f"{n_done} done"))
+        if n_fmt:  parts.append(grn(f"{n_fmt} formatting"))
+        if n_wait: parts.append(wht(f"{n_wait} waiting"))
+        if n_fail: parts.append(red(f"{n_fail} failed"))
+        if n_lost: parts.append(bred(f"{n_lost} lost"))
         out.append(_L(f"  {'  |  '.join(parts) or '...'}"))
 
         next_in = max(0, interval - int(time.monotonic() - last_poll))
         if paused:
-            out.append(_L(f"  {YLW}PAUSED{RST}   Interval: {interval}s"))
+            out.append(_L(f"  {ylw('PAUSED')}   Interval: {interval}s"))
         else:
             out.append(_L(f"  Interval: {interval}s   Next poll in {next_in}s"))
 
         if footer:
-            fc = BGRN if footer_green else RED
             out.append(_L(""))
-            out.append(_L(f"{fc}{footer}{RST}"))
+            out.append(_L(bgrn(footer) if footer_green else bred(footer)))
 
-        out.append(_L(f"  {WHT}[r]{RST} refresh   {WHT}[p]{RST} pause/resume   {WHT}[+/-]{RST} interval   {WHT}[q]{RST} quit   Ctrl+C exit"))
+        out.append(_L(f"  {wht('[r]')} refresh   {wht('[p]')} pause/resume   {wht('[+/-]')} interval   {wht('[q]')} quit   Ctrl+C exit"))
         out.append("\033[J")
 
         sys.stdout.write("".join(out))
@@ -732,8 +857,8 @@ def _progress_ui(devices: list[Device]) -> None:
                 for s in states:
                     _poll(s)
 
-            if all(s.status in ("done", "failed") for s in states) and any(s.ever_started for s in states):
-                n_f = sum(1 for s in states if s.status == "failed")
+            if all(s.status in ("done", "failed", "lost") for s in states) and any(s.ever_started for s in states):
+                n_f = sum(1 for s in states if s.status in ("failed", "lost"))
                 if n_f:
                     draw(f"  Finished — {n_f} disk(s) FAILED.  Press q to exit.", footer_green=False)
                 else:
@@ -755,8 +880,8 @@ def _progress_ui(devices: list[Device]) -> None:
 def cmd_speedtest(args: argparse.Namespace) -> bool:
     devices = discover()
     if not devices:
-        print(ylw("No disks found on specified ports."))
-        return False
+        print(bred("No disks installed on specified ports."))
+        return True
 
     enrich_lsblk(devices)
     print_table(devices, show_health=False)
@@ -797,8 +922,8 @@ def cmd_speedtest(args: argparse.Namespace) -> bool:
         return bgrn(spd) if float(m.group(1)) >= 100 else ylw(spd)
 
     results: list[tuple[Device, str]] = []
-    for d in selected:
-        print(f"  {cyn(f'{d.path}  Slot {d.slot}')}")
+    for i, d in enumerate(selected, 1):
+        print(f"  {cyn(f'[{i}/{len(selected)}]')}  {d.path}  Slot {d.slot}")
 
         if _disk_size(d.path) == 0:
             print(f"    {bred('disk reports 0 bytes — rescan needed (blockdev --rereadpt ' + d.path + ')')}")
@@ -814,24 +939,87 @@ def cmd_speedtest(args: argparse.Namespace) -> bool:
         print(f"\n  {bold('Summary:')}")
         print(bold(f"    {'Slot':<6}  {'Device':<12}  {'Read':>12}"))
         for d, spd in results:
-            print(f"    {str(d.slot):<6}  {d.path:<12}  {_spd_col(spd):>12}")
+            spd_str = _spd_col(spd)
+            spd_pad = " " * max(0, 12 - _visible_len(spd_str))
+            print(f"    {str(d.slot):<6}  {d.path:<12}  {spd_pad}{spd_str}")
 
     log("SPEEDTEST " + " ".join(f"slot={d.slot} read={spd}" for d, spd in results))
+    return True
+
+def cmd_debug_zero(args: argparse.Namespace) -> bool:
+    """Debug zero detection on a specific device."""
+    import sys
+    if not args.device:
+        print(bred("Usage: python disk.py debug-zero /dev/sdX"))
+        return False
+
+    dev_path = args.device
+    print(f"\n  {bold('Debugging zero detection for:')} {cyn(dev_path)}\n")
+
+    # Get size
+    r = subprocess.run(["blockdev", "--getsize64", dev_path],
+                      capture_output=True, text=True, timeout=5)
+    total_bytes = int(r.stdout.strip())
+    print(f"  Total size: {total_bytes / (1024**4):.2f} TiB ({total_bytes} bytes)")
+
+    # Sample from 3 positions
+    positions = [
+        ("Start (0)", 0),
+        ("Middle", (total_bytes // 2) - 2048),
+        ("End", total_bytes - 4096),
+    ]
+
+    for label, pos in positions:
+        pos = max(0, min(pos, total_bytes - 4096))
+        print(f"\n  {label} (byte {pos}):")
+        try:
+            r = subprocess.run(
+                ["dd", f"if={dev_path}", "of=/dev/stdout", f"skip={pos // 512}",
+                 "bs=512", "count=8", "iflag=direct"],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10
+            )
+            if r.returncode != 0:
+                print(f"    {ylw('dd failed:')} {r.stderr.decode('utf-8', errors='ignore').strip()}")
+                continue
+
+            if not r.stdout:
+                print(f"    {ylw('No output from dd')}")
+                continue
+
+            zero_count = sum(1 for b in r.stdout if b == 0)
+            non_zero_count = len(r.stdout) - zero_count
+            has_data = any(b != 0 for b in r.stdout)
+
+            print(f"    Read {len(r.stdout)} bytes")
+            print(f"    Zero bytes: {zero_count}, Non-zero bytes: {non_zero_count}")
+            print(f"    Status: {bgrn('ZERO') if not has_data else bred('DATA')}")
+
+            if has_data:
+                # Show first few non-zero bytes
+                sample = r.stdout[:64]
+                hex_str = " ".join(f"{b:02x}" for b in sample)
+                print(f"    First 64 bytes (hex): {hex_str}")
+        except Exception as e:
+            print(f"    {bred(f'Error: {e}')}")
+
     return True
 
 def cmd_missing(args: argparse.Namespace) -> bool:
     devices = discover()
     enrich_lsblk(devices)
+    enrich_fmt_status(devices)
+    enrich_zeroed_status(devices)
     by_port = {d.port: d for d in devices}
     ordered_ports = sorted(PORTS, key=lambda p: PORT_TO_SLOT.get(p, 999))
 
-    slot_w, phy_w, st_w, dev_w, ser_w, mdl_w = 4, 3, 8, 12, 22, 20
+    slot_w, phy_w, st_w, fmt_w, dev_w, ser_w, mdl_w = 4, 3, 8, 5, 12, 22, 20
     print()
     print(f"  {bold('Expected PHY/SLOT status:')}")
     print("  " + _pad(bold("Slot"), slot_w) + "  " + _pad(bold("PHY"), phy_w) + "  " +
-          _pad(bold("Status"), st_w) + "   " + _pad(bold("Device"), dev_w) + "  " +
+          _pad(bold("Status"), st_w) + "   " + _pad(bold("Fmt"), fmt_w) + "  " +
+          _pad(bold("Device"), dev_w) + "  " +
           _pad(bold("Serial"), ser_w) + "  " + _pad(bold("Model"), mdl_w))
-    print(f"  {'─'*slot_w}  {'─'*phy_w}  {'─'*st_w}   {'─'*dev_w}  {'─'*ser_w}  {'─'*mdl_w}")
+    print(f"  {'─'*slot_w}  {'─'*phy_w}  {'─'*st_w}   {'─'*fmt_w}  {'─'*dev_w}  {'─'*ser_w}  {'─'*mdl_w}")
 
     missing: list[tuple[int | str, str]] = []
     for port in ordered_ports:
@@ -840,12 +1028,15 @@ def cmd_missing(args: argparse.Namespace) -> bool:
         phy = m.group(1) if m else "?"
         dev = by_port.get(port)
         if dev:
+            fmt_fld = _fmt_status_color(dev.fmt_status, dev.zeroed)
             print("  " + _pad(str(slot), slot_w) + "  " + _pad(phy, phy_w) + "  " +
-                  _pad(bgrn("PRESENT"), st_w) + "   " + _pad(dev.path, dev_w) + "  " +
+                  _pad(bgrn("PRESENT"), st_w) + "   " + _pad(fmt_fld, fmt_w) + "  " +
+                  _pad(dev.path, dev_w) + "  " +
                   _pad(dev.serial or "N/A", ser_w) + "  " + _pad(dev.model or "unknown", mdl_w))
         else:
             print("  " + _pad(str(slot), slot_w) + "  " + _pad(phy, phy_w) + "  " +
-                  _pad(bred("MISSING"), st_w) + "   " + _pad("-", dev_w) + "  " +
+                  _pad(bred("MISSING"), st_w) + "   " + _pad("-", fmt_w) + "  " +
+                  _pad("-", dev_w) + "  " +
                   _pad("-", ser_w) + "  " + _pad("-", mdl_w))
             missing.append((slot, port))
 
@@ -924,6 +1115,9 @@ def main() -> None:
     sub.add_parser("speedtest", help="Read/write speed test (1 GiB per disk)")
     sub.add_parser("missing", help="Show expected PHY slots and highlight missing disks")
 
+    p_debug = sub.add_parser("debug-zero", help="Debug zero detection on a specific device")
+    p_debug.add_argument("device", help="Device path (e.g., /dev/sda)")
+
     args = parser.parse_args()
 
     if not args.cmd:
@@ -936,6 +1130,7 @@ def main() -> None:
         "progress": cmd_progress,
         "speedtest": cmd_speedtest,
         "missing": cmd_missing,
+        "debug-zero": cmd_debug_zero,
     }
     dispatch[args.cmd](args)
 
