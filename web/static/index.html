@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disk Manager</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --dim: #8b949e;
+    --green: #3fb950;
+    --green-bright: #56d364;
+    --yellow: #d29922;
+    --yellow-bright: #e3b341;
+    --red: #f85149;
+    --red-bright: #ff7b72;
+    --cyan: #58a6ff;
+    --cyan-bright: #79c0ff;
+    --font: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  header h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--cyan-bright);
+  }
+
+  nav {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  nav button {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--dim);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+
+  nav button:hover { color: var(--text); border-color: var(--border); }
+  nav button.active { color: var(--cyan-bright); border-color: var(--cyan); background: rgba(88,166,255,0.1); }
+
+  main { padding: 20px; max-width: 1400px; margin: 0 auto; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .toolbar h2 { font-size: 14px; font-weight: 600; color: var(--text); margin-right: 4px; }
+
+  .btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--cyan); color: var(--cyan-bright); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn.primary { background: rgba(63,185,80,0.15); border-color: var(--green); color: var(--green-bright); }
+  .btn.primary:hover { background: rgba(63,185,80,0.25); }
+  .btn.danger { background: rgba(248,81,73,0.1); border-color: var(--red); color: var(--red-bright); }
+  .btn.danger:hover { background: rgba(248,81,73,0.2); }
+  .btn.warn { background: rgba(210,153,34,0.1); border-color: var(--yellow); color: var(--yellow-bright); }
+
+  .statusbar {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 14px;
+    margin-bottom: 16px;
+    color: var(--dim);
+    font-size: 12px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .statusbar.error   { border-color: var(--red);   color: var(--red-bright); }
+  .statusbar.success { border-color: var(--green);  color: var(--green-bright); }
+  .statusbar.info    { border-color: var(--cyan);   color: var(--cyan-bright); }
+
+  .spin {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .tbl-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+
+  th {
+    text-align: left;
+    padding: 8px 10px;
+    color: var(--dim);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg3); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-green  { background: rgba(63,185,80,0.15);  color: var(--green-bright); border: 1px solid var(--green); }
+  .badge-red    { background: rgba(248,81,73,0.12);  color: var(--red-bright);   border: 1px solid var(--red); }
+  .badge-yellow { background: rgba(210,153,34,0.15); color: var(--yellow-bright);border: 1px solid var(--yellow); }
+  .badge-dim    { background: rgba(139,148,158,0.1); color: var(--dim);          border: 1px solid var(--border); }
+
+  .prog-wrap {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    height: 14px;
+    width: 120px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .prog-fill { height: 100%; background: var(--green); transition: width 0.5s ease; }
+  .prog-fill.yellow { background: var(--yellow); }
+  .prog-fill.red    { background: var(--red); }
+
+  input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--cyan); cursor: pointer; }
+
+  .modal-bg {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-bg.open { display: flex; }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    width: 480px;
+    max-width: 95vw;
+  }
+
+  .modal h3 { font-size: 15px; margin-bottom: 12px; color: var(--text); }
+  .modal p  { color: var(--dim); margin-bottom: 12px; font-size: 12px; line-height: 1.6; }
+
+  .modal .dev-list {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    max-height: 160px;
+    overflow-y: auto;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  .modal input[type=text] {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: var(--font);
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+    margin-bottom: 16px;
+    transition: border-color 0.15s;
+  }
+  .modal input[type=text]:focus { border-color: var(--cyan); }
+  .modal input[type=text].bad  { border-color: var(--red); }
+  .modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  .prog-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .interval-ctrl { display: flex; gap: 4px; align-items: center; color: var(--dim); }
+
+  .cyan   { color: var(--cyan-bright); }
+  .dim    { color: var(--dim); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⬡ Disk Manager</h1>
+  <nav>
+    <button class="active" data-tab="health">Health</button>
+    <button data-tab="format">Format</button>
+    <button data-tab="progress">Progress</button>
+    <button data-tab="speed">Speed</button>
+    <button data-tab="slots">Slots</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ===== HEALTH ===== -->
+  <div id="tab-health" class="tab-content active">
+    <div class="toolbar">
+      <h2>Disk Health</h2>
+      <button class="btn primary" id="health-scan-btn">Scan</button>
+    </div>
+    <div class="statusbar" id="health-status">Press Scan to run HDSentinel health check.</div>
+    <div class="tbl-wrap hidden" id="health-table-wrap">
+      <table>
+        <thead><tr>
+          <th>Slot</th><th>Device</th><th>Size</th><th>Fmt</th>
+          <th>Health</th><th>Serial</th><th>Model</th>
+        </tr></thead>
+        <tbody id="health-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== FORMAT ===== -->
+  <div id="tab-format" class="tab-content">
+    <div class="toolbar">
+      <h2>Format Disks</h2>
+      <button class="btn" id="format-refresh-btn">Refresh</button>
+      <button class="btn" id="format-selall-btn">Select All</button>
+      <button class="btn danger" id="format-start-btn" disabled>Format Selected</button>
+    </div>
+    <div class="statusbar" id="format-status">Press Refresh to load devices.</div>
+    <div class="tbl-wrap hidden" id="format-table-wrap">
+      <table>
+        <thead><tr>
+          <th><input type="checkbox" id="format-chk-all"></th>
+          <th>Slot</th><th>Device</th><th>Size</th><th>Fmt</th><th>Serial</th><th>Model</th>
+        </tr></thead>
+        <tbody id="format-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== PROGRESS ===== -->
+  <div id="tab-progress" class="tab-content">
+    <div class="toolbar">
+      <h2>Format Progress</h2>
+      <button class="btn" id="prog-load-btn">Load Devices</button>
+      <button class="btn primary hidden" id="prog-monitor-btn">Monitor Selected</button>
+    </div>
+    <div class="prog-controls hidden" id="prog-controls">
+      <button class="btn warn" id="prog-pause-btn">Pause</button>
+      <button class="btn" id="prog-refresh-btn">Poll Now</button>
+      <span class="interval-ctrl">
+        Interval:
+        <button class="btn" id="prog-int-minus">−</button>
+        <span id="prog-interval-val">5</span>s
+        <button class="btn" id="prog-int-plus">+</button>
+      </span>
+      <button class="btn danger" id="prog-stop-btn">Stop</button>
+    </div>
+    <div class="statusbar" id="prog-status">Load devices to start monitoring.</div>
+    <div class="tbl-wrap hidden" id="prog-table-wrap">
+      <table id="prog-table">
+        <thead><tr id="prog-thead-row">
+          <th><input type="checkbox" id="prog-chk-all"></th>
+          <th>Slot</th><th>Device</th><th>Serial</th><th>Model</th>
+        </tr></thead>
+        <tbody id="prog-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== SPEED ===== -->
+  <div id="tab-speed" class="tab-content">
+    <div class="toolbar">
+      <h2>Speed Test</h2>
+      <button class="btn" id="speed-load-btn">Load Devices</button>
+      <button class="btn primary hidden" id="speed-start-btn">Test Selected</button>
+    </div>
+    <div class="statusbar" id="speed-status">Load devices, then select which to test.</div>
+    <div class="tbl-wrap hidden" id="speed-table-wrap">
+      <table>
+        <thead><tr>
+          <th><input type="checkbox" id="speed-chk-all"></th>
+          <th>Slot</th><th>Device</th><th>Size</th><th>Serial</th><th>Model</th><th>Read Speed</th>
+        </tr></thead>
+        <tbody id="speed-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== SLOTS ===== -->
+  <div id="tab-slots" class="tab-content">
+    <div class="toolbar">
+      <h2>Slot Status</h2>
+      <button class="btn" id="slots-refresh-btn">Refresh</button>
+    </div>
+    <div class="statusbar" id="slots-status">Press Refresh to load slot status.</div>
+    <div class="tbl-wrap hidden" id="slots-table-wrap">
+      <table>
+        <thead><tr>
+          <th>Slot</th><th>Status</th><th>Fmt</th>
+          <th>Device</th><th>Serial</th><th>Model</th>
+        </tr></thead>
+        <tbody id="slots-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ===== CONFIRM MODAL ===== -->
+<div class="modal-bg" id="confirm-modal">
+  <div class="modal">
+    <h3>⚠ Confirm Format</h3>
+    <p>This will <strong>PERMANENTLY ERASE</strong> all data on the following devices. This cannot be undone.</p>
+    <div class="dev-list" id="confirm-dev-list"></div>
+    <p>Type <strong>YES</strong> to confirm:</p>
+    <input type="text" id="confirm-input" placeholder="YES" autocomplete="off">
+    <div class="modal-actions">
+      <button class="btn" id="confirm-cancel-btn">Cancel</button>
+      <button class="btn danger" id="confirm-ok-btn">Format Now</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Utilities
+// ---------------------------------------------------------------------------
+const $ = id => document.getElementById(id);
+
+function setStatus(id, msg, cls) {
+  const e = $(id);
+  e.className = 'statusbar' + (cls ? ' ' + cls : '');
+  e.innerHTML = msg;
+}
+
+function fmtDuration(secs) {
+  secs = Math.max(0, Math.floor(secs));
+  const h = Math.floor(secs / 3600), rem = secs % 3600;
+  const m = Math.floor(rem / 60), s = rem % 60;
+  if (h) return `${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+  if (m) return `${m}m ${String(s).padStart(2,'0')}s`;
+  return `${s}s`;
+}
+
+function fmtBadge(fmt_status, zeroed) {
+  const base = fmt_status ? (fmt_status === '512' ? '512B' : `${fmt_status}B`) : '?';
+  if (zeroed === 'zero')    return `<span class="badge badge-green">${base} ✓</span>`;
+  if (zeroed === 'data')    return `<span class="badge badge-yellow">${base} ✗</span>`;
+  if (fmt_status === '512') return `<span class="badge badge-green">${base}</span>`;
+  if (fmt_status)           return `<span class="badge badge-yellow">${base}</span>`;
+  return `<span class="badge badge-dim">?</span>`;
+}
+
+function healthBadge(h) {
+  if (!h || h === '?' || h === '--' || h === 'Unknown')
+    return `<span class="badge badge-dim">${h || '?'}</span>`;
+  const v = parseFloat(h);
+  if (isNaN(v)) return `<span class="badge badge-dim">${h}</span>`;
+  return `<span class="badge ${v >= 90 ? 'badge-green' : 'badge-red'}">${v}%</span>`;
+}
+
+function speedBadge(speed) {
+  if (!speed || ['?','timeout','no data','error'].includes(speed))
+    return `<span class="badge badge-red">${speed || '?'}</span>`;
+  const m = speed.match(/([\d.]+)/);
+  if (!m) return `<span class="badge badge-yellow">${speed}</span>`;
+  return `<span class="badge ${parseFloat(m[1]) >= 100 ? 'badge-green' : 'badge-yellow'}">${speed}</span>`;
+}
+
+function postJSON(url, body) {
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).then(r => r.json());
+}
+
+// ---------------------------------------------------------------------------
+// Tab switching
+// ---------------------------------------------------------------------------
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    $(`tab-${btn.dataset.tab}`).classList.add('active');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// HEALTH TAB — simple POST, blocking
+// ---------------------------------------------------------------------------
+$('health-scan-btn').addEventListener('click', () => {
+  const btn = $('health-scan-btn');
+  btn.disabled = true;
+  $('health-table-wrap').classList.add('hidden');
+  setStatus('health-status', '<span class="spin"></span> Scanning (this may take a minute)...', 'info');
+
+  postJSON('/api/health', {})
+    .then(data => {
+      if (data.error) {
+        setStatus('health-status', `✗ ${data.error}`, 'error');
+        return;
+      }
+      if (!data.devices || data.devices.length === 0) {
+        setStatus('health-status', data.message || 'No disks found.', '');
+        return;
+      }
+      renderHealthTable(data.devices);
+      const warn = data.rc !== 0 ? `  <span style="color:var(--yellow-bright)">(exit ${data.rc})</span>` : '';
+      setStatus('health-status', `✓ Done in ${fmtDuration(data.elapsed)} — ${data.devices.length} device(s)${warn}`, 'success');
+      $('health-table-wrap').classList.remove('hidden');
+    })
+    .catch(err => setStatus('health-status', `✗ ${err.message}`, 'error'))
+    .finally(() => { btn.disabled = false; });
+});
+
+function renderHealthTable(devices) {
+  $('health-tbody').innerHTML = devices.map(d => `
+    <tr>
+      <td class="cyan">${d.slot}</td>
+      <td class="dim">${d.path}</td>
+      <td>${d.size || '—'}</td>
+      <td>${fmtBadge(d.fmt_status, d.zeroed)}</td>
+      <td>${healthBadge(d.health)}</td>
+      <td>${d.serial || '<span class="dim">N/A</span>'}</td>
+      <td>${d.model || '<span class="dim">unknown</span>'}</td>
+    </tr>`).join('');
+}
+
+// ---------------------------------------------------------------------------
+// FORMAT TAB
+// ---------------------------------------------------------------------------
+let formatDevices = [];
+
+function loadFormatDevices() {
+  const btn = $('format-refresh-btn');
+  btn.disabled = true;
+  $('format-table-wrap').classList.add('hidden');
+  $('format-start-btn').disabled = true;
+  setStatus('format-status', '<span class="spin"></span> Loading...', 'info');
+
+  fetch('/api/discover').then(r => r.json())
+    .then(devs => {
+      formatDevices = devs;
+      renderFormatTable(devs);
+      setStatus('format-status', `${devs.length} device(s) found.`, 'success');
+      $('format-table-wrap').classList.remove('hidden');
+    })
+    .catch(err => setStatus('format-status', `✗ ${err.message}`, 'error'))
+    .finally(() => { btn.disabled = false; });
+}
+
+function renderFormatTable(devices) {
+  $('format-tbody').innerHTML = devices.map((d, i) => `
+    <tr>
+      <td><input type="checkbox" class="fmt-chk" data-idx="${i}"></td>
+      <td class="cyan">${d.slot}</td>
+      <td class="dim">${d.path}</td>
+      <td>${d.size || '—'}</td>
+      <td>${fmtBadge(d.fmt_status, d.zeroed)}</td>
+      <td>${d.serial || '<span class="dim">N/A</span>'}</td>
+      <td>${d.model || '<span class="dim">unknown</span>'}</td>
+    </tr>`).join('');
+  document.querySelectorAll('.fmt-chk').forEach(c => c.addEventListener('change', updateFmtBtn));
+}
+
+function updateFmtBtn() {
+  $('format-start-btn').disabled = !document.querySelectorAll('.fmt-chk:checked').length;
+}
+
+$('format-refresh-btn').addEventListener('click', loadFormatDevices);
+
+$('format-selall-btn').addEventListener('click', () => {
+  const chks = document.querySelectorAll('.fmt-chk');
+  const all = [...chks].every(c => c.checked);
+  chks.forEach(c => c.checked = !all);
+  updateFmtBtn();
+});
+
+$('format-chk-all').addEventListener('change', e => {
+  document.querySelectorAll('.fmt-chk').forEach(c => c.checked = e.target.checked);
+  updateFmtBtn();
+});
+
+$('format-start-btn').addEventListener('click', () => {
+  const selected = [...document.querySelectorAll('.fmt-chk:checked')].map(c => formatDevices[+c.dataset.idx]);
+  if (!selected.length) return;
+  $('confirm-dev-list').innerHTML = selected.map(d =>
+    `<div><span class="cyan">${d.path}</span>  <span class="dim">${d.model || 'unknown'}</span>  s/n: ${d.serial || 'N/A'}</div>`
+  ).join('');
+  $('confirm-input').value = '';
+  $('confirm-input').classList.remove('bad');
+  $('confirm-modal').classList.add('open');
+  $('confirm-input').focus();
+});
+
+$('confirm-cancel-btn').addEventListener('click', () => $('confirm-modal').classList.remove('open'));
+$('confirm-modal').addEventListener('click', e => { if (e.target === $('confirm-modal')) $('confirm-modal').classList.remove('open'); });
+$('confirm-ok-btn').addEventListener('click', doFormat);
+$('confirm-input').addEventListener('keydown', e => { if (e.key === 'Enter') doFormat(); });
+
+function doFormat() {
+  if ($('confirm-input').value.trim() !== 'YES') {
+    $('confirm-input').classList.add('bad');
+    $('confirm-input').focus();
+    return;
+  }
+  $('confirm-modal').classList.remove('open');
+
+  const selected = [...document.querySelectorAll('.fmt-chk:checked')].map(c => formatDevices[+c.dataset.idx]);
+  setStatus('format-status', '<span class="spin"></span> Launching format...', 'info');
+  $('format-start-btn').disabled = true;
+
+  postJSON('/api/format/start', { devices: selected.map(d => d.path) })
+    .then(data => {
+      const failN = (data.failed || []).length;
+      let msg = `Format launched for: ${(data.started || []).join(', ') || 'none'}`;
+      if (failN) msg += `  <span style="color:var(--red-bright)">${failN} failed</span>`;
+      setStatus('format-status', msg, 'success');
+      if (data.started && data.started.length > 0) {
+        document.querySelector('nav button[data-tab="progress"]').click();
+        startProgressMonitor(data.started);
+      }
+    })
+    .catch(err => {
+      setStatus('format-status', `✗ ${err.message}`, 'error');
+      $('format-start-btn').disabled = false;
+    });
+}
+
+// ---------------------------------------------------------------------------
+// PROGRESS TAB — polls REST endpoint
+// ---------------------------------------------------------------------------
+let progDevices = [];
+let progMonitoring = false;
+let progPaused = false;
+let progInterval = 5;
+let progTimerId = null;
+let progMonitoredPaths = [];
+
+$('prog-load-btn').addEventListener('click', () => {
+  const btn = $('prog-load-btn');
+  btn.disabled = true;
+  $('prog-table-wrap').classList.add('hidden');
+  $('prog-monitor-btn').classList.add('hidden');
+  setStatus('prog-status', '<span class="spin"></span> Loading...', 'info');
+
+  fetch('/api/discover').then(r => r.json())
+    .then(devs => {
+      progDevices = devs;
+      renderProgSelectionTable(devs);
+      setStatus('prog-status', `${devs.length} device(s) found. Select to monitor.`, 'success');
+      $('prog-table-wrap').classList.remove('hidden');
+      $('prog-monitor-btn').classList.remove('hidden');
+    })
+    .catch(err => setStatus('prog-status', `✗ ${err.message}`, 'error'))
+    .finally(() => { btn.disabled = false; });
+});
+
+function renderProgSelectionTable(devices) {
+  if (progMonitoring) return;
+  $('prog-thead-row').innerHTML = `
+    <th><input type="checkbox" id="prog-chk-all"></th>
+    <th>Slot</th><th>Device</th><th>Serial</th><th>Model</th>
+  `;
+  $('prog-chk-all').addEventListener('change', e => {
+    document.querySelectorAll('.prog-chk').forEach(c => c.checked = e.target.checked);
+  });
+  $('prog-tbody').innerHTML = devices.map((d, i) => `
+    <tr>
+      <td><input type="checkbox" class="prog-chk" data-idx="${i}" checked></td>
+      <td class="cyan">${d.slot}</td>
+      <td class="dim">${d.path}</td>
+      <td>${d.serial || '<span class="dim">N/A</span>'}</td>
+      <td>${d.model || '<span class="dim">unknown</span>'}</td>
+    </tr>`).join('');
+}
+
+$('prog-monitor-btn').addEventListener('click', () => {
+  const paths = [...document.querySelectorAll('.prog-chk:checked')].map(c => progDevices[+c.dataset.idx].path);
+  if (!paths.length) { setStatus('prog-status', 'No devices selected.', 'error'); return; }
+  startProgressMonitor(paths);
+});
+
+function startProgressMonitor(paths) {
+  if (progTimerId) clearInterval(progTimerId);
+  progMonitoring = true;
+  progPaused = false;
+  progInterval = 5;
+  progMonitoredPaths = paths;
+  $('prog-interval-val').textContent = progInterval;
+  $('prog-pause-btn').textContent = 'Pause';
+
+  $('prog-load-btn').classList.add('hidden');
+  $('prog-monitor-btn').classList.add('hidden');
+  $('prog-controls').classList.remove('hidden');
+  $('prog-table-wrap').classList.remove('hidden');
+
+  // Switch progress table to monitoring header
+  $('prog-thead-row').innerHTML = `
+    <th>Slot</th><th>Serial</th><th>Status</th>
+    <th>Progress</th><th>%</th><th>Elapsed</th><th>ETA</th>
+  `;
+
+  setStatus('prog-status', `<span class="spin"></span> Monitoring ${paths.length} device(s)...`, 'info');
+
+  function doPoll() {
+    postJSON('/api/format/poll', { devices: paths })
+      .then(data => {
+        if (data.error) { setStatus('prog-status', `✗ ${data.error}`, 'error'); return; }
+        renderProgressRows(data.devices);
+        if (data.all_done) {
+          clearInterval(progTimerId);
+          progTimerId = null;
+          progMonitoring = false;
+          const nFail = data.devices.filter(d => d.status === 'failed' || d.status === 'lost').length;
+          $('prog-controls').classList.add('hidden');
+          $('prog-load-btn').classList.remove('hidden');
+          setStatus('prog-status', nFail
+            ? `✗ Finished — ${nFail} device(s) FAILED.`
+            : '✓ All formatting complete.', nFail ? 'error' : 'success');
+        }
+      })
+      .catch(err => setStatus('prog-status', `✗ ${err.message}`, 'error'));
+  }
+
+  doPoll();
+  progTimerId = setInterval(() => { if (!progPaused) doPoll(); }, progInterval * 1000);
+}
+
+function renderProgressRows(devices) {
+  $('prog-tbody').innerHTML = devices.map(d => {
+    let badge, fillCls;
+    if      (d.status === 'done' || d.status === 'done_nostart')
+      { badge = '<span class="badge badge-green">done</span>';    fillCls = ''; }
+    else if (d.status === 'failed')
+      { badge = '<span class="badge badge-red">FAILED</span>';    fillCls = 'red'; }
+    else if (d.status === 'lost')
+      { badge = '<span class="badge badge-red">LOST</span>';      fillCls = 'red'; }
+    else if (d.status === 'waiting')
+      { badge = '<span class="badge badge-dim">waiting</span>';   fillCls = 'yellow'; }
+    else
+      { badge = '<span class="badge badge-yellow">formatting</span>'; fillCls = d.progress >= 50 ? '' : 'yellow'; }
+
+    const pct = (d.status === 'done' || d.status === 'done_nostart') ? 100 : d.progress;
+    const bar = `<div class="prog-wrap"><div class="prog-fill ${fillCls}" style="width:${pct}%"></div></div>`;
+    const pctStr = (d.status === 'done' || d.status === 'done_nostart') ? '100.00%'
+                 : d.status === 'failed' ? '0.00%'
+                 : (d.status === 'lost' || d.status === 'waiting') ? '—'
+                 : `${d.progress.toFixed(2)}%`;
+    const eta = d.status === 'formatting' && d.eta && d.eta !== '--' ? `ETA: ${d.eta}`
+              : d.eta === 'done' ? 'done' : '—';
+
+    return `<tr>
+      <td class="cyan">Slot ${d.slot}</td>
+      <td>${d.serial || '<span class="dim">N/A</span>'}</td>
+      <td>${badge}</td>
+      <td>${bar}</td>
+      <td>${pctStr}</td>
+      <td>${fmtDuration(d.elapsed)}</td>
+      <td>${eta}</td>
+    </tr>`;
+  }).join('');
+}
+
+$('prog-pause-btn').addEventListener('click', () => {
+  progPaused = !progPaused;
+  $('prog-pause-btn').textContent = progPaused ? 'Resume' : 'Pause';
+  setStatus('prog-status', progPaused
+    ? `⏸ Paused (interval: ${progInterval}s)`
+    : `<span class="spin"></span> Monitoring ${progMonitoredPaths.length} device(s)...`, 'info');
+});
+
+$('prog-refresh-btn').addEventListener('click', () => {
+  if (progMonitoredPaths.length) {
+    postJSON('/api/format/poll', { devices: progMonitoredPaths })
+      .then(data => { if (!data.error) renderProgressRows(data.devices); });
+  }
+});
+
+$('prog-int-minus').addEventListener('click', () => {
+  progInterval = Math.max(1, progInterval - 1);
+  $('prog-interval-val').textContent = progInterval;
+  if (progTimerId) { clearInterval(progTimerId); progTimerId = setInterval(() => { if (!progPaused) { postJSON('/api/format/poll', { devices: progMonitoredPaths }).then(data => { if (!data.error) renderProgressRows(data.devices); }); } }, progInterval * 1000); }
+});
+
+$('prog-int-plus').addEventListener('click', () => {
+  progInterval = Math.min(60, progInterval + 1);
+  $('prog-interval-val').textContent = progInterval;
+  if (progTimerId) { clearInterval(progTimerId); progTimerId = setInterval(() => { if (!progPaused) { postJSON('/api/format/poll', { devices: progMonitoredPaths }).then(data => { if (!data.error) renderProgressRows(data.devices); }); } }, progInterval * 1000); }
+});
+
+$('prog-stop-btn').addEventListener('click', () => {
+  if (progTimerId) { clearInterval(progTimerId); progTimerId = null; }
+  progMonitoring = false;
+  $('prog-controls').classList.add('hidden');
+  $('prog-load-btn').classList.remove('hidden');
+  $('prog-monitor-btn').classList.add('hidden');
+  $('prog-table-wrap').classList.add('hidden');
+  setStatus('prog-status', 'Monitoring stopped.', '');
+});
+
+// ---------------------------------------------------------------------------
+// SPEED TAB — blocking POST
+// ---------------------------------------------------------------------------
+let speedDevices = [];
+
+$('speed-load-btn').addEventListener('click', () => {
+  const btn = $('speed-load-btn');
+  btn.disabled = true;
+  $('speed-table-wrap').classList.add('hidden');
+  $('speed-start-btn').classList.add('hidden');
+  setStatus('speed-status', '<span class="spin"></span> Loading...', 'info');
+
+  fetch('/api/discover').then(r => r.json())
+    .then(devs => {
+      speedDevices = devs;
+      renderSpeedTable(devs);
+      setStatus('speed-status', `${devs.length} device(s) found. Select to test.`, 'success');
+      $('speed-table-wrap').classList.remove('hidden');
+      $('speed-start-btn').classList.remove('hidden');
+    })
+    .catch(err => setStatus('speed-status', `✗ ${err.message}`, 'error'))
+    .finally(() => { btn.disabled = false; });
+});
+
+function renderSpeedTable(devices) {
+  $('speed-chk-all').addEventListener('change', e => {
+    document.querySelectorAll('.speed-chk').forEach(c => c.checked = e.target.checked);
+  });
+  $('speed-tbody').innerHTML = devices.map((d, i) => `
+    <tr>
+      <td><input type="checkbox" class="speed-chk" data-idx="${i}" checked></td>
+      <td class="cyan">${d.slot}</td>
+      <td class="dim">${d.path}</td>
+      <td>${d.size || '—'}</td>
+      <td>${d.serial || '<span class="dim">N/A</span>'}</td>
+      <td>${d.model || '<span class="dim">unknown</span>'}</td>
+      <td id="speed-result-${i}"><span class="dim">—</span></td>
+    </tr>`).join('');
+}
+
+$('speed-start-btn').addEventListener('click', () => {
+  const selected = [...document.querySelectorAll('.speed-chk:checked')].map(c => speedDevices[+c.dataset.idx]);
+  if (!selected.length) { setStatus('speed-status', 'No devices selected.', 'error'); return; }
+
+  const btn = $('speed-start-btn');
+  btn.disabled = true;
+  setStatus('speed-status', `<span class="spin"></span> Testing ${selected.length} device(s) — this may take several minutes...`, 'info');
+
+  // Show spinners on selected rows
+  selected.forEach(d => {
+    const idx = speedDevices.findIndex(x => x.path === d.path);
+    const cell = $(`speed-result-${idx}`);
+    if (cell) cell.innerHTML = '<span class="spin"></span>';
+  });
+
+  postJSON('/api/speedtest', { devices: selected.map(d => d.path) })
+    .then(data => {
+      if (data.error) { setStatus('speed-status', `✗ ${data.error}`, 'error'); return; }
+      data.results.forEach(r => {
+        const idx = speedDevices.findIndex(d => d.path === r.device);
+        const cell = $(`speed-result-${idx}`);
+        if (cell) cell.innerHTML = speedBadge(r.speed);
+      });
+      const nOk = data.results.filter(r => !['?','timeout','no data','error'].includes(r.speed)).length;
+      setStatus('speed-status', `✓ Done — ${nOk}/${data.results.length} device(s) returned speeds.`, 'success');
+    })
+    .catch(err => setStatus('speed-status', `✗ ${err.message}`, 'error'))
+    .finally(() => { btn.disabled = false; });
+});
+
+// ---------------------------------------------------------------------------
+// SLOTS TAB
+// ---------------------------------------------------------------------------
+$('slots-refresh-btn').addEventListener('click', () => {
+  const btn = $('slots-refresh-btn');
+  btn.disabled = true;
+  $('slots-table-wrap').classList.add('hidden');
+  setStatus('slots-status', '<span class="spin"></span> Loading...', 'info');
+
+  fetch('/api/missing').then(r => r.json())
+    .then(data => {
+      if (data.error) { setStatus('slots-status', `✗ ${data.error}`, 'error'); return; }
+      $('slots-tbody').innerHTML = data.slots.map(s => {
+        const badge = s.status === 'PRESENT'
+          ? '<span class="badge badge-green">PRESENT</span>'
+          : '<span class="badge badge-red">MISSING</span>';
+        const d = s.device;
+        return `<tr>
+          <td class="cyan">${s.slot}</td>
+          <td>${badge}</td>
+          <td>${d ? fmtBadge(d.fmt_status, d.zeroed) : '<span class="dim">—</span>'}</td>
+          <td>${d ? `<span class="dim">${d.path}</span>` : '<span class="dim">—</span>'}</td>
+          <td>${d ? (d.serial || '<span class="dim">N/A</span>') : '<span class="dim">—</span>'}</td>
+          <td>${d ? (d.model || '<span class="dim">unknown</span>') : '<span class="dim">—</span>'}</td>
+        </tr>`;
+      }).join('');
+      const missing = data.slots.filter(s => s.status === 'MISSING').length;
+      setStatus('slots-status',
+        missing ? `⚠ ${missing} slot(s) MISSING out of ${data.slots.length}.`
+                : `✓ All ${data.slots.length} slots present.`,
+        missing ? 'error' : 'success');
+      $('slots-table-wrap').classList.remove('hidden');
+    })
+    .catch(err => setStatus('slots-status', `✗ ${err.message}`, 'error'))
+    .finally(() => { btn.disabled = false; });
+});
+</script>
+</body>
+</html>
