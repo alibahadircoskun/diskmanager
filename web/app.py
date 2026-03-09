@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime
 import logging
 import os
 import re
@@ -36,7 +37,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 log = logging.getLogger("diskweb")
 
 # ---------------------------------------------------------------------------
-# Security hardening
+# Configuration
+# NOTE: This is an internal tool used by ~5 people. Security is not a
+# primary concern — prioritize functionality over strict hardening.
 # ---------------------------------------------------------------------------
 
 _RATE_DEFAULT     = os.environ.get("RATE_LIMIT_DEFAULT",     "60 per minute")
@@ -78,10 +81,15 @@ def add_security_headers(response):
 # ---------------------------------------------------------------------------
 _progress_states: dict[str, _disk.DevState] = {}
 _progress_lock = threading.Lock()
+_polling_cancelled = threading.Event()
 
 # Registry of launched format jobs
 _format_jobs: dict[str, list[str]] = {}
 _format_jobs_lock = threading.Lock()
+
+# Registry of format subprocesses for reaping
+_format_procs: dict[str, subprocess.Popen] = {}
+_format_procs_lock = threading.Lock()
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -124,6 +132,30 @@ def _get_devices_enriched() -> list[_disk.Device]:
     return devices
 
 
+def disk_logfile_path() -> str:
+    return str(Path(_disk.LOGFILE).resolve())
+
+
+def tail_log_lines(path: Path, limit: int = 500) -> list[str]:
+    if limit <= 0:
+        return []
+    chunk_size = 8192
+    chunks: list[bytes] = []
+    newline_count = 0
+    with path.open("rb") as f:
+        f.seek(0, os.SEEK_END)
+        pos = f.tell()
+        while pos > 0 and newline_count <= limit:
+            read_size = min(chunk_size, pos)
+            pos -= read_size
+            f.seek(pos)
+            chunk = f.read(read_size)
+            chunks.append(chunk)
+            newline_count += chunk.count(b"\n")
+    payload = b"".join(reversed(chunks))
+    return payload.decode("utf-8", errors="replace").splitlines()[-limit:]
+
+
 # ---------------------------------------------------------------------------
 # Static files
 # ---------------------------------------------------------------------------
@@ -131,6 +163,39 @@ def _get_devices_enriched() -> list[_disk.Device]:
 @app.route("/")
 def index():
     return send_from_directory(app.static_folder, "index.html")
+
+
+@app.route("/api/logs")
+def api_logs():
+    source = disk_logfile_path()
+    path = Path(source)
+    try:
+        lines = tail_log_lines(path, limit=500)
+        return jsonify({
+            "ok": True,
+            "source": source,
+            "line_count": len(lines),
+            "lines": lines,
+            "fetched_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        })
+    except FileNotFoundError:
+        return jsonify({
+            "ok": False,
+            "source": source,
+            "error": "Log file not found.",
+        }), 404
+    except PermissionError:
+        return jsonify({
+            "ok": False,
+            "source": source,
+            "error": "Log file is unreadable (permission denied).",
+        }), 403
+    except OSError as e:
+        return jsonify({
+            "ok": False,
+            "source": source,
+            "error": f"Failed to read log file: {e}",
+        }), 500
 
 
 # ---------------------------------------------------------------------------
@@ -239,14 +304,23 @@ def api_format_start():
     started = []
     failed = []
 
+    # Starting a new format run re-enables polling globally.
+    _polling_cancelled.clear()
+
     for path in requested_paths:
         if path not in valid_paths:
             failed.append({"path": path, "reason": "device not found"})
             continue
         dev = by_path[path]
         try:
+            if not Path(path).is_block_device():
+                failed.append({"path": path, "reason": "device disappeared before format launch"})
+                continue
             _disk.prep_for_format(path)
             sg_dev = _disk.sg_device(path)
+            if sg_dev is None:
+                failed.append({"path": path, "reason": "cannot resolve sg device"})
+                continue
             cmd = ["sg_format", "--format", "--size=512", sg_dev]
             p = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             time.sleep(0.25)
@@ -254,7 +328,8 @@ def api_format_start():
             if rc is None or rc == 0:
                 started.append(path)
                 _disk.log(f"FORMAT_STARTED mode=full slot={dev.slot} dev={path} model={dev.model} serial={dev.serial}")
-                # Initialize progress state
+                with _format_procs_lock:
+                    _format_procs[path] = p
                 with _progress_lock:
                     _progress_states[path] = _disk.DevState(dev)
             else:
@@ -271,6 +346,24 @@ def api_format_start():
 
 
 # ---------------------------------------------------------------------------
+# REST: Monitor polling control
+# ---------------------------------------------------------------------------
+
+@app.route("/api/format/poll/cancel", methods=["POST"])
+@limiter.limit(_RATE_DESTRUCTIVE)
+def api_format_poll_cancel():
+    _polling_cancelled.set()
+    return jsonify({"ok": True, "cancelled": True})
+
+
+@app.route("/api/format/poll/resume", methods=["POST"])
+@limiter.limit(_RATE_DESTRUCTIVE)
+def api_format_poll_resume():
+    _polling_cancelled.clear()
+    return jsonify({"ok": True, "cancelled": False})
+
+
+# ---------------------------------------------------------------------------
 # REST: Format progress poll
 # ---------------------------------------------------------------------------
 
@@ -282,21 +375,25 @@ def api_format_poll():
 
     device_paths: list[str] = data["devices"]
 
-    # Discover to fill in metadata for any new paths
+    if _polling_cancelled.is_set():
+        return jsonify({"error": "Polling cancelled by another session."}), 409
+
+    # Allow monitor-only sessions (without /api/format/start) by lazily
+    # creating progress state for currently discovered devices.
     discovered = _disk.discover()
     _disk.enrich_lsblk(discovered)
     by_path = {d.path: d for d in discovered}
 
     results = []
+    errors = []
     with _progress_lock:
         for path in device_paths:
-            # Create DevState if not already tracked
             if path not in _progress_states:
-                if path in by_path:
-                    _progress_states[path] = _disk.DevState(by_path[path])
-                else:
-                    fake = _disk.Device(path, "")
-                    _progress_states[path] = _disk.DevState(fake)
+                dev = by_path.get(path)
+                if dev is None:
+                    errors.append({"path": path, "error": "device not found"})
+                    continue
+                _progress_states[path] = _disk.DevState(dev)
 
             state = _progress_states[path]
             _disk._poll(state)
@@ -306,8 +403,21 @@ def api_format_poll():
     all_done = all(r["status"] in terminal for r in results)
     any_started = any(r["ever_started"] for r in results)
 
+    # Reap finished format processes
+    for r in results:
+        if r["status"] in terminal:
+            with _format_procs_lock:
+                proc = _format_procs.pop(r["path"], None)
+            if proc is not None:
+                try:
+                    proc.wait(timeout=1)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait()
+
     return jsonify({
         "devices": results,
+        "errors": errors,
         "all_done": all_done and any_started,
     })
 
@@ -331,20 +441,34 @@ def api_speedtest():
     _disk.enrich_lsblk(discovered)
     by_path = {d.path: d for d in discovered}
 
+    valid_paths = {d.path for d in discovered}
     results = []
     for path in device_paths:
-        dev = by_path.get(path)
-        slot = dev.slot if dev else "?"
+        if path not in valid_paths:
+            results.append({"device": path, "slot": "?", "serial": "?",
+                            "speed": "error",
+                            "reason": "device not found"})
+            continue
+        dev = by_path[path]
+        slot = dev.slot
+        serial = dev.serial or "?"
 
         try:
             r = subprocess.run(["blockdev", "--getsize64", path],
                                capture_output=True, text=True, timeout=30)
+            if r.returncode != 0:
+                raise ValueError(f"blockdev failed with rc={r.returncode}")
             size = int(r.stdout.strip())
         except Exception:
             size = 0
 
         if size == 0:
-            results.append({"device": path, "slot": slot, "speed": "no data"})
+            results.append({
+                "device": path,
+                "slot": slot,
+                "serial": serial,
+                "speed": "no data",
+            })
             continue
 
         try:
@@ -363,9 +487,20 @@ def api_speedtest():
         except Exception:
             speed = "error"
 
-        results.append({"device": path, "slot": slot, "speed": speed})
+        results.append({
+            "device": path,
+            "slot": slot,
+            "serial": serial,
+            "speed": speed,
+        })
 
-    _disk.log("SPEEDTEST " + " ".join(f"slot={r['slot']} read={r['speed']}" for r in results))
+    _disk.log(
+        "SPEEDTEST " + " ".join(
+            f"serial={r.get('serial', '?')} dev={r.get('device', '?')} "
+            f"slot={r.get('slot', '?')} read={r.get('speed', '?')}"
+            for r in results
+        )
+    )
     return jsonify({"results": results})
 
 
@@ -378,5 +513,8 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8880)
     parser.add_argument("--host", default="0.0.0.0")
     args = parser.parse_args()
-    log.info(f"Starting Disk Manager web app on {args.host}:{args.port}")
+    log.info(
+        f"Starting Disk Manager web app on {args.host}:{args.port} "
+        f"(disk log: {disk_logfile_path()})"
+    )
     app.run(host=args.host, port=args.port, debug=False, threaded=True)

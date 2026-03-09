@@ -11,7 +11,7 @@
     --bg3: #21262d;
     --border: #30363d;
     --text: #e6edf3;
-    --dim: #8b949e;
+    --dim: #9ea7b2;
     --green: #3fb950;
     --green-bright: #56d364;
     --yellow: #d29922;
@@ -21,30 +21,67 @@
     --cyan: #58a6ff;
     --cyan-bright: #79c0ff;
     --font: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    --glow-cyan: rgba(88,166,255,0.15);
+    --glow-green: rgba(63,185,80,0.12);
+    --glow-red: rgba(248,81,73,0.12);
+    --glow-yellow: rgba(210,153,34,0.12);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.3);
+    --shadow-lg: 0 8px 28px rgba(0,0,0,0.55), 0 4px 8px rgba(0,0,0,0.3);
+    --glass-bg: rgba(22,27,34,0.8);
+    --glass-border: rgba(48,54,61,0.6);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --transition-fast: 0.15s ease;
+    --transition-med: 0.25s ease;
   }
 
+  :focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+  }
+
+  .skip-link {
+    position: absolute; top: -48px; left: 0; padding: 8px 16px;
+    background: var(--cyan); color: var(--bg); font-weight: 600;
+    font-family: var(--font); font-size: 13px; z-index: 999;
+    transition: top 0.2s; text-decoration: none; border-radius: 0 0 var(--radius-sm) 0;
+  }
+  .skip-link:focus { top: 0; }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
 
   body {
     background: var(--bg);
     color: var(--text);
     font-family: var(--font);
     font-size: 13px;
+    line-height: 1.5;
     min-height: 100vh;
   }
 
   header {
-    background: var(--bg2);
+    background: rgba(22,27,34,0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--border);
-    padding: 12px 20px;
+    padding: 14px 24px;
     display: flex;
     align-items: center;
     gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.03), var(--shadow-sm);
   }
 
   header h1 {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 600;
+    letter-spacing: -0.01em;
     color: var(--cyan-bright);
   }
 
@@ -52,6 +89,8 @@
     display: flex;
     gap: 4px;
     margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   nav button {
@@ -59,20 +98,40 @@
     border: 1px solid transparent;
     color: var(--dim);
     padding: 6px 14px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     font-family: var(--font);
     font-size: 13px;
-    transition: all 0.15s;
+    font-weight: 500;
+    transition: all var(--transition-med);
   }
 
   nav button:hover { color: var(--text); border-color: var(--border); }
-  nav button.active { color: var(--cyan-bright); border-color: var(--cyan); background: rgba(88,166,255,0.1); }
+  nav button.active { color: var(--cyan-bright); border-color: var(--cyan); background: rgba(88,166,255,0.1); box-shadow: 0 0 12px rgba(88,166,255,0.1); }
 
   main { padding: 20px; max-width: 1400px; margin: 0 auto; }
 
   .tab-content { display: none; }
   .tab-content.active { display: block; }
+
+  .op-section {
+    scroll-margin-top: 78px;
+    margin-bottom: 16px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(8px);
+  }
+  .op-section:last-child { margin-bottom: 0; }
+  .op-section.section-flash {
+    animation: section-flash 1.2s ease;
+  }
+  @keyframes section-flash {
+    0%   { box-shadow: 0 0 0 0 rgba(88,166,255,0.45); border-color: var(--cyan); }
+    100% { box-shadow: 0 0 0 0 rgba(88,166,255,0); border-color: var(--border); }
+  }
 
   .toolbar {
     display: flex;
@@ -81,32 +140,47 @@
     margin-bottom: 16px;
     flex-wrap: wrap;
   }
+  .toolbar-spacer {
+    flex: 1 1 auto;
+  }
 
-  .toolbar h2 { font-size: 14px; font-weight: 600; color: var(--text); margin-right: 4px; }
+  .toolbar h2 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); margin-right: 4px; }
+  .slot-toolbar-hint {
+    margin-top: -8px;
+    margin-bottom: 12px;
+    color: var(--dim);
+    font-size: 11px;
+  }
 
   .btn {
     background: var(--bg3);
     border: 1px solid var(--border);
     color: var(--text);
     padding: 6px 14px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     font-family: var(--font);
     font-size: 13px;
-    transition: all 0.15s;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+    position: relative;
   }
-  .btn:hover { border-color: var(--cyan); color: var(--cyan-bright); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn.primary { background: rgba(63,185,80,0.15); border-color: var(--green); color: var(--green-bright); }
-  .btn.primary:hover { background: rgba(63,185,80,0.25); }
-  .btn.danger { background: rgba(248,81,73,0.1); border-color: var(--red); color: var(--red-bright); }
-  .btn.danger:hover { background: rgba(248,81,73,0.2); }
+  .btn:hover { border-color: var(--cyan); color: var(--cyan-bright); transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+  .btn:active { transform: translateY(0); box-shadow: 0 1px 1px rgba(0,0,0,0.2); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; filter: saturate(0.5); transform: none !important; box-shadow: none !important; }
+  .btn.primary { background: rgba(63,185,80,0.15); border-color: var(--green); color: var(--green-bright); box-shadow: 0 1px 2px rgba(63,185,80,0.15); }
+  .btn.primary:hover { background: rgba(63,185,80,0.25); box-shadow: 0 2px 8px rgba(63,185,80,0.25); }
+  .btn.danger { background: rgba(248,81,73,0.1); border-color: var(--red); color: var(--red-bright); box-shadow: 0 1px 2px rgba(248,81,73,0.1); }
+  .btn.danger:hover { background: rgba(248,81,73,0.2); box-shadow: 0 2px 8px rgba(248,81,73,0.2); }
   .btn.warn { background: rgba(210,153,34,0.1); border-color: var(--yellow); color: var(--yellow-bright); }
+  .btn.warn:hover { background: rgba(210,153,34,0.2); box-shadow: 0 2px 8px rgba(210,153,34,0.2); }
 
   .statusbar {
     background: var(--bg2);
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-left: 3px solid transparent;
+    border-radius: var(--radius-sm);
     padding: 8px 14px;
     margin-bottom: 16px;
     color: var(--dim);
@@ -115,90 +189,163 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+    transition: border-color var(--transition-med), color var(--transition-med);
   }
-  .statusbar.error   { border-color: var(--red);   color: var(--red-bright); }
-  .statusbar.success { border-color: var(--green);  color: var(--green-bright); }
-  .statusbar.info    { border-color: var(--cyan);   color: var(--cyan-bright); }
+  .statusbar.error   { border-color: var(--red);   border-left-color: var(--red);   color: var(--red-bright); }
+  .statusbar.success { border-color: var(--green);  border-left-color: var(--green);  color: var(--green-bright); }
+  .statusbar.info    { border-color: var(--cyan);   border-left-color: var(--cyan);   color: var(--cyan-bright); }
 
   .spin {
     display: inline-block;
-    width: 14px; height: 14px;
-    border: 2px solid var(--border);
-    border-top-color: var(--cyan);
+    width: 16px; height: 16px;
+    border: 2px solid rgba(48,54,61,0.5);
+    border-top-color: var(--cyan-bright);
     border-radius: 50%;
-    animation: spin 0.7s linear infinite;
+    animation: spin 0.6s linear infinite;
     flex-shrink: 0;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes shimmer {
+    0% { background-position: -300px 0; }
+    100% { background-position: 300px 0; }
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg3) 25%, rgba(48,54,61,0.55) 50%, var(--bg3) 75%);
+    background-size: 600px 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
 
-  .tbl-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; overflow-x: auto; }
+  .tbl-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; overflow-x: auto; box-shadow: var(--shadow-sm); }
 
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
 
   th {
     text-align: left;
-    padding: 8px 10px;
+    padding: 9px 10px;
     color: var(--dim);
+    background: rgba(33,38,45,0.5);
     border-bottom: 1px solid var(--border);
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     white-space: nowrap;
   }
 
   td {
-    padding: 7px 10px;
+    padding: 8px 10px;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
     vertical-align: middle;
+    transition: background var(--transition-fast);
   }
 
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--bg3); }
+  tr.slots-row-selected td { background: rgba(88,166,255,0.12); }
+  tr.slots-row-selected td:first-child { box-shadow: inset 3px 0 0 var(--cyan); }
+  tr.slots-row-selected:hover td { background: rgba(88,166,255,0.17); }
+
+  .slots-table-select-col {
+    width: 32px;
+    text-align: center;
+  }
+  .slots-table-actions-col { min-width: 300px; }
+  .slots-row-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .slots-row-actions .btn {
+    padding: 4px 9px;
+    font-size: 11px;
+    line-height: 1.2;
+  }
 
   .badge {
     display: inline-block;
-    padding: 2px 8px;
-    border-radius: 12px;
+    padding: 3px 10px;
+    border-radius: 99px;
     font-size: 11px;
     font-weight: 600;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    transition: all var(--transition-fast);
   }
-  .badge-green  { background: rgba(63,185,80,0.15);  color: var(--green-bright); border: 1px solid var(--green); }
-  .badge-red    { background: rgba(248,81,73,0.12);  color: var(--red-bright);   border: 1px solid var(--red); }
-  .badge-yellow { background: rgba(210,153,34,0.15); color: var(--yellow-bright);border: 1px solid var(--yellow); }
-  .badge-dim    { background: rgba(139,148,158,0.1); color: var(--dim);          border: 1px solid var(--border); }
+  .badge-green  { background: linear-gradient(180deg, rgba(63,185,80,0.22), rgba(63,185,80,0.12));  color: var(--green-bright); border: 1px solid var(--green); }
+  .badge-red    { background: linear-gradient(180deg, rgba(248,81,73,0.18), rgba(248,81,73,0.09));  color: var(--red-bright);   border: 1px solid var(--red); }
+  .badge-yellow { background: linear-gradient(180deg, rgba(210,153,34,0.22), rgba(210,153,34,0.11)); color: var(--yellow-bright);border: 1px solid var(--yellow); }
+  .badge-dim    { background: rgba(158,167,178,0.08); color: var(--dim);          border: 1px solid var(--border); }
 
   .prog-wrap {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    height: 14px;
+    background: rgba(33,38,45,0.85);
+    border-radius: 99px;
+    height: 8px;
     width: 120px;
     overflow: hidden;
     display: inline-block;
     vertical-align: middle;
   }
-  .prog-fill { height: 100%; background: var(--green); transition: width 0.5s ease; }
-  .prog-fill.yellow { background: var(--yellow); }
-  .prog-fill.red    { background: var(--red); }
+  .prog-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--green-bright));
+    box-shadow: 0 0 8px rgba(63,185,80,0.35);
+    border-radius: 99px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .prog-fill.yellow {
+    background: linear-gradient(90deg, var(--yellow), var(--yellow-bright));
+    box-shadow: 0 0 8px rgba(210,153,34,0.3);
+  }
+  .prog-fill.red {
+    background: linear-gradient(90deg, var(--red), var(--red-bright));
+    box-shadow: 0 0 8px rgba(248,81,73,0.3);
+  }
+  @keyframes progress-stripes {
+    0% { background-position: 0 0; }
+    100% { background-position: 20px 0; }
+  }
+  .prog-fill.active {
+    background-image: linear-gradient(
+      -45deg,
+      rgba(255,255,255,0.1) 25%, transparent 25%,
+      transparent 50%, rgba(255,255,255,0.1) 50%,
+      rgba(255,255,255,0.1) 75%, transparent 75%
+    );
+    background-size: 20px 8px;
+    animation: progress-stripes 0.8s linear infinite;
+  }
 
   input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--cyan); cursor: pointer; }
 
   .modal-bg {
     display: none;
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     z-index: 100;
     align-items: center;
     justify-content: center;
   }
-  .modal-bg.open { display: flex; }
+  .modal-bg.open { display: flex; animation: modal-bg-in 0.2s ease; }
+  @keyframes modal-bg-in { from { opacity: 0; } to { opacity: 1; } }
 
   .modal {
     background: var(--bg2);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: var(--radius-lg);
     padding: 24px;
-    width: 480px;
+    width: 500px;
     max-width: 95vw;
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(48,54,61,0.4);
+    animation: modal-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes modal-in {
+    from { opacity: 0; transform: scale(0.94) translateY(10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
   }
 
   .modal h3 { font-size: 15px; margin-bottom: 12px; color: var(--text); }
@@ -242,6 +389,689 @@
   }
   .interval-ctrl { display: flex; gap: 4px; align-items: center; color: var(--dim); }
 
+  .r510-panel {
+    margin-bottom: 16px;
+  }
+  .r510-panel-scroll {
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  .r510-chassis {
+    min-width: 520px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0)),
+      linear-gradient(180deg, #1b2129 0%, #141921 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 16px;
+    position: relative;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -12px 28px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.4);
+  }
+  .r510-chassis-label {
+    color: var(--dim);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+    text-align: center;
+    opacity: 0.55;
+    position: relative;
+    z-index: 1;
+  }
+  .r510-chassis::before,
+  .r510-chassis::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    height: 6px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #222a35, #293240, #222a35);
+    border: 1px solid rgba(48,54,61,0.8);
+    z-index: 0;
+  }
+  .r510-chassis::before { top: 6px; }
+  .r510-chassis::after { bottom: 6px; }
+  .r510-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(110px, 1fr));
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+  }
+  .r510-bay {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 62px;
+    padding: 10px 10px 10px 36px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: linear-gradient(180deg, #20262f 0%, #141a22 100%);
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    font-family: var(--font);
+    user-select: none;
+    touch-action: manipulation;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform 0.1s ease, background var(--transition-fast);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .r510-bay:hover { border-color: #4b5563; transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 7px rgba(0,0,0,0.4); }
+  .r510-bay:active { transform: translateY(0); box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.3); }
+  .bay-handle {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    bottom: 8px;
+    width: 18px;
+    border-radius: 4px;
+    border: 1px solid #47515e;
+    background: linear-gradient(180deg, #3f4957 0%, #262d37 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -1px 0 rgba(0,0,0,0.45);
+  }
+  .bay-handle::before,
+  .bay-handle::after {
+    content: "";
+    position: absolute;
+    left: 3px; right: 3px;
+    height: 1px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 1px;
+  }
+  .bay-handle::before { top: 33%; }
+  .bay-handle::after  { bottom: 33%; }
+  .bay-led {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(230,237,243,0.15);
+    background: #59636f;
+    box-shadow: none;
+    flex-shrink: 0;
+    transition: background var(--transition-med), box-shadow var(--transition-med);
+  }
+  .bay-slot-label {
+    color: var(--cyan-bright);
+    font-weight: 600;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .bay-state {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--dim);
+  }
+  .bay-health {
+    margin-left: 8px;
+    font-size: 11px;
+    color: var(--dim);
+    font-weight: 600;
+  }
+  .bay-size {
+    margin-left: 6px;
+    font-size: 10px;
+    color: var(--dim);
+    font-weight: 400;
+  }
+  .r510-bay.bay--green { border-color: rgba(63,185,80,0.55); }
+  .r510-bay.bay--green .bay-led {
+    background: var(--green-bright);
+    box-shadow: 0 0 6px rgba(63,185,80,0.7), 0 0 14px rgba(63,185,80,0.35);
+  }
+  .r510-bay.bay--green .bay-state { color: var(--green-bright); }
+  .r510-bay.bay--yellow { border-color: rgba(210,153,34,0.6); }
+  .r510-bay.bay--yellow .bay-led {
+    background: var(--yellow-bright);
+    box-shadow: 0 0 6px rgba(210,153,34,0.65), 0 0 14px rgba(210,153,34,0.3);
+  }
+  .r510-bay.bay--yellow .bay-state { color: var(--yellow-bright); }
+  .r510-bay.bay--red { border-color: rgba(248,81,73,0.65); }
+  .r510-bay.bay--red .bay-led {
+    background: var(--red-bright);
+    box-shadow: 0 0 6px rgba(248,81,73,0.7), 0 0 14px rgba(248,81,73,0.3);
+  }
+  .r510-bay.bay--red .bay-state { color: var(--red-bright); }
+  .r510-bay.bay--selected {
+    border-color: var(--cyan);
+    background: linear-gradient(180deg, rgba(88,166,255,0.22) 0%, rgba(19,39,63,0.9) 100%);
+    box-shadow: 0 0 0 1px rgba(88,166,255,0.8), 0 0 0 4px rgba(88,166,255,0.2), 0 0 18px rgba(88,166,255,0.12), inset 0 0 20px rgba(88,166,255,0.1);
+    transition: all var(--transition-med);
+  }
+  @keyframes led-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+  .r510-bay.bay--monitoring .bay-led { animation: led-pulse 2s ease-in-out infinite; }
+  .r510-bay.bay--selected .bay-slot-label {
+    color: #dbeafe;
+    text-shadow: 0 0 6px rgba(88,166,255,0.35);
+  }
+  .r510-bay.bay--selected .bay-state {
+    color: #c3dcff;
+  }
+  .r510-bay.bay--selected .bay-led {
+    border-color: rgba(255,255,255,0.45);
+    box-shadow: 0 0 10px rgba(88,166,255,0.5);
+  }
+  .bay-selected-pill {
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(121,192,255,0.8);
+    background: rgba(88,166,255,0.18);
+    color: #dbeafe;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    line-height: 1.3;
+  }
+  .r510-bay.bay--monitoring {
+    box-shadow: inset 0 0 0 1px rgba(88,166,255,0.5), inset 0 -2px 0 rgba(88,166,255,0.45);
+  }
+  .r510-bay.bay--selected.bay--monitoring {
+    box-shadow: 0 0 0 1px rgba(88,166,255,0.8), 0 0 0 4px rgba(88,166,255,0.24), inset 0 0 0 1px rgba(88,166,255,0.55), inset 0 -2px 0 rgba(88,166,255,0.45);
+  }
+
+  .slot-detail-card {
+    margin-top: 12px;
+    background: linear-gradient(180deg, var(--bg2) 0%, rgba(13,17,23,0.6) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .slot-detail-empty {
+    min-height: 92px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .slot-detail-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .slot-detail-head-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .slot-detail-head .btn {
+    padding: 4px 9px;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+  .slot-detail-title {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .slot-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 14px;
+  }
+  .slot-detail-item { min-width: 0; }
+  .slot-detail-key {
+    color: var(--dim);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 3px;
+  }
+  .slot-detail-val {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+    min-height: 16px;
+  }
+  .slot-detail-meta {
+    margin-top: 10px;
+    color: var(--dim);
+    font-size: 11px;
+  }
+
+  .slot-action-controls {
+    margin-top: 12px;
+    margin-bottom: 6px;
+  }
+  .slot-action-hint {
+    min-height: 16px;
+    margin-bottom: 10px;
+    color: var(--dim);
+    font-size: 11px;
+  }
+  .slot-action-hint.error {
+    color: var(--red-bright);
+  }
+  .slot-action-hint.info {
+    color: var(--cyan-bright);
+  }
+  .slot-action-results {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .slot-result-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    min-height: 86px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    transition: border-color var(--transition-med), transform var(--transition-med), box-shadow var(--transition-med);
+  }
+  .slot-result-card:hover {
+    border-color: #4b5563;
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), var(--shadow-sm);
+  }
+  .slot-result-label {
+    color: var(--dim);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .slot-result-value {
+    font-size: 12px;
+    min-height: 20px;
+  }
+  .slot-result-meta {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--dim);
+    min-height: 16px;
+  }
+  .slot-collapsible {
+    margin-bottom: 10px;
+  }
+  .slot-collapsible-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .slot-collapsible-title {
+    color: var(--dim);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .slot-collapsible-head .btn {
+    padding: 4px 9px;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+  .slot-speed-run-head .btn {
+    padding: 4px 9px;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+  .slot-speed-run {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+  }
+  .slot-speed-run-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .slot-speed-run-head-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .slot-speed-run-title {
+    color: var(--dim);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .slot-speed-run-meta {
+    color: var(--dim);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .slot-speed-run-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .slot-speed-run-rows {
+    display: grid;
+    gap: 6px;
+  }
+  .slot-speed-run-row {
+    display: grid;
+    grid-template-columns: 54px minmax(100px, 1fr) 116px 88px;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.01);
+    font-size: 11px;
+    min-width: 0;
+  }
+  .slot-speed-run-row.head {
+    color: var(--dim);
+    background: transparent;
+  }
+  .slot-speed-run-row .path {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .slot-speed-run-empty {
+    color: var(--dim);
+    font-size: 11px;
+    padding: 6px 2px;
+  }
+  .slot-monitor {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+  }
+  .slot-monitor-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .slot-monitor-polling-state {
+    margin-left: auto;
+    color: var(--dim);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .slot-monitor-stats {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .slot-monitor-stat {
+    min-width: 0;
+    font-size: 12px;
+  }
+  .slot-monitor-stat .k {
+    display: block;
+    color: var(--dim);
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+  .slot-monitor-summary {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .slot-monitor-chip {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+    font-size: 12px;
+    min-width: 0;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+  }
+  .slot-monitor-chip:hover { background: rgba(255,255,255,0.04); }
+  .slot-monitor-chip .k {
+    display: block;
+    color: var(--dim);
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+  .slot-monitor-rows {
+    display: grid;
+    gap: 6px;
+  }
+  .slot-monitor-row {
+    display: grid;
+    grid-template-columns: 54px minmax(100px, 1fr) 148px minmax(80px, 1fr) 66px 84px 84px;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.01);
+    font-size: 11px;
+    min-width: 0;
+  }
+  .slot-monitor-row.head {
+    color: var(--dim);
+    background: transparent;
+  }
+  .slot-monitor-row .path {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .slot-monitor-row .nowrap {
+    white-space: nowrap;
+  }
+  .slot-monitor-row .prog-wrap {
+    width: 100%;
+    height: 10px;
+  }
+  .slot-monitor-empty {
+    color: var(--dim);
+    font-size: 11px;
+    padding: 6px 2px;
+  }
+  .logs-meta {
+    margin-bottom: 10px;
+    color: var(--dim);
+    font-size: 12px;
+  }
+  .logs-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .logs-input,
+  .logs-select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    font-family: var(--font);
+    font-size: 12px;
+    min-height: 32px;
+  }
+  .logs-select {
+    min-width: 220px;
+  }
+  .logs-input {
+    flex: 1 1 280px;
+    min-width: 220px;
+  }
+  .logs-table-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: auto;
+    max-height: 62vh;
+    min-height: 260px;
+    box-shadow: var(--shadow-sm);
+  }
+  .logs-table {
+    width: 100%;
+    min-width: 920px;
+  }
+  .logs-table th,
+  .logs-table td {
+    font-size: 11px;
+    vertical-align: top;
+  }
+  .logs-table td {
+    white-space: normal;
+  }
+  .logs-summary {
+    color: var(--text);
+    line-height: 1.45;
+  }
+  .logs-device {
+    color: var(--dim);
+    font-family: var(--font);
+    white-space: nowrap;
+  }
+  .logs-raw-btn {
+    padding: 3px 8px;
+    font-size: 11px;
+    line-height: 1.1;
+  }
+  .logs-raw-line {
+    background: rgba(255,255,255,0.01);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--dim);
+    padding: 8px 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .logs-empty {
+    margin-top: 10px;
+    color: var(--dim);
+    font-size: 12px;
+  }
+
+  /* Toast notifications */
+  .toast-container {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    background: rgba(22,27,34,0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 10px 16px;
+    font-size: 12px;
+    color: var(--text);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(48,54,61,0.35);
+    pointer-events: auto;
+    animation: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    max-width: 320px;
+    line-height: 1.5;
+  }
+  .toast.success { border-color: var(--green); border-left-color: var(--green); color: var(--green-bright); }
+  .toast.error   { border-color: var(--red);   border-left-color: var(--red);   color: var(--red-bright); }
+  .toast.info    { border-color: var(--cyan);   border-left-color: var(--cyan);  color: var(--cyan-bright); }
+  .toast.warn    { border-color: var(--yellow); border-left-color: var(--yellow);color: var(--yellow-bright); }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateX(24px) scale(0.95); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+
+  @media (max-width: 760px) {
+    main { padding: 12px; }
+    header { padding: 10px 14px; }
+    header h1 { font-size: 15px; }
+    .toolbar { gap: 6px; }
+    .slot-detail-grid { grid-template-columns: 1fr; }
+    .slot-action-results { grid-template-columns: 1fr; }
+    .slot-detail-head {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    .slot-detail-head-right {
+      width: 100%;
+      justify-content: space-between;
+    }
+    .slot-speed-run-head {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    .slot-speed-run-head-right {
+      width: 100%;
+      justify-content: space-between;
+    }
+    .slot-speed-run-summary { grid-template-columns: 1fr 1fr; }
+    .slot-speed-run-row {
+      grid-template-columns: 1fr 1fr;
+      row-gap: 6px;
+    }
+    .slot-speed-run-row.head { display: none; }
+    .slot-monitor-stats { grid-template-columns: 1fr 1fr; }
+    .slot-monitor-summary { grid-template-columns: 1fr 1fr 1fr; }
+    .slot-monitor-row {
+      grid-template-columns: 1fr 1fr;
+      row-gap: 6px;
+    }
+    .slot-monitor-row.head { display: none; }
+    .logs-controls {
+      align-items: stretch;
+    }
+    .logs-select,
+    .logs-input,
+    .logs-controls .btn {
+      width: 100%;
+    }
+    .toast-container { right: 12px; left: 12px; }
+    .toast { max-width: 100%; }
+  }
+
+  @media (max-width: 480px) {
+    body { font-size: 12px; }
+    .r510-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .slot-toolbar-hint { display: none; }
+    nav { gap: 2px; }
+    nav button { padding: 6px 10px; font-size: 12px; }
+  }
+
+  /* Section visibility animations */
+  .tab-content.active { animation: tab-fade-in 0.2s ease; }
+  @keyframes tab-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+  @keyframes bay-select-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(88,166,255,0.6); }
+    50%  { box-shadow: 0 0 0 6px rgba(88,166,255,0.15); }
+    100% { box-shadow: 0 0 0 1px rgba(88,166,255,0.8), 0 0 0 4px rgba(88,166,255,0.2), 0 0 18px rgba(88,166,255,0.12), inset 0 0 20px rgba(88,166,255,0.1); }
+  }
+
+  .slot-collapsible-body {
+    overflow: hidden;
+  }
+  .slot-collapsible-body[style*="max-height: 0"] {
+    /* collapsed state */
+  }
+
   .cyan   { color: var(--cyan-bright); }
   .dim    { color: var(--dim); }
   .hidden { display: none !important; }
@@ -249,160 +1079,382 @@
 </head>
 <body>
 
+<a href="#section-slots" class="skip-link">Skip to content</a>
+<div id="toast-container" class="toast-container"></div>
+
 <header>
   <h1>⬡ Disk Manager</h1>
-  <nav>
-    <button class="active" data-tab="health">Health</button>
-    <button data-tab="format">Format</button>
-    <button data-tab="progress">Progress</button>
-    <button data-tab="speed">Speed</button>
-    <button data-tab="slots">Slots</button>
+  <nav aria-label="Primary tabs">
+    <button id="nav-tab-slots" class="active" type="button">Slots</button>
+    <button id="nav-tab-logs" type="button">Logs</button>
   </nav>
 </header>
 
 <main>
 
-  <!-- ===== HEALTH ===== -->
-  <div id="tab-health" class="tab-content active">
+  <section id="section-slots" class="op-section">
+  <div id="tab-slots" class="tab-content active">
     <div class="toolbar">
-      <h2>Disk Health</h2>
-      <button class="btn primary" id="health-scan-btn">Scan</button>
-    </div>
-    <div class="statusbar" id="health-status">Press Scan to run HDSentinel health check.</div>
-    <div class="tbl-wrap hidden" id="health-table-wrap">
-      <table>
-        <thead><tr>
-          <th>Slot</th><th>Device</th><th>Size</th><th>Fmt</th>
-          <th>Health</th><th>Serial</th><th>Model</th>
-        </tr></thead>
-        <tbody id="health-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ===== FORMAT ===== -->
-  <div id="tab-format" class="tab-content">
-    <div class="toolbar">
-      <h2>Format Disks</h2>
-      <button class="btn" id="format-refresh-btn">Refresh</button>
-      <button class="btn" id="format-selall-btn">Select All</button>
-      <button class="btn danger" id="format-start-btn" disabled>Format Selected</button>
-    </div>
-    <div class="statusbar" id="format-status">Press Refresh to load devices.</div>
-    <div class="tbl-wrap hidden" id="format-table-wrap">
-      <table>
-        <thead><tr>
-          <th><input type="checkbox" id="format-chk-all"></th>
-          <th>Slot</th><th>Device</th><th>Size</th><th>Fmt</th><th>Serial</th><th>Model</th>
-        </tr></thead>
-        <tbody id="format-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ===== PROGRESS ===== -->
-  <div id="tab-progress" class="tab-content">
-    <div class="toolbar">
-      <h2>Format Progress</h2>
-      <button class="btn" id="prog-load-btn">Load Devices</button>
-      <button class="btn primary hidden" id="prog-monitor-btn">Monitor Selected</button>
-    </div>
-    <div class="prog-controls hidden" id="prog-controls">
-      <button class="btn warn" id="prog-pause-btn">Pause</button>
-      <button class="btn" id="prog-refresh-btn">Poll Now</button>
-      <span class="interval-ctrl">
-        Interval:
-        <button class="btn" id="prog-int-minus">−</button>
-        <span id="prog-interval-val">5</span>s
-        <button class="btn" id="prog-int-plus">+</button>
-      </span>
-      <button class="btn danger" id="prog-stop-btn">Stop</button>
-    </div>
-    <div class="statusbar" id="prog-status">Load devices to start monitoring.</div>
-    <div class="tbl-wrap hidden" id="prog-table-wrap">
-      <table id="prog-table">
-        <thead><tr id="prog-thead-row">
-          <th><input type="checkbox" id="prog-chk-all"></th>
-          <th>Slot</th><th>Device</th><th>Serial</th><th>Model</th>
-        </tr></thead>
-        <tbody id="prog-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ===== SPEED ===== -->
-  <div id="tab-speed" class="tab-content">
-    <div class="toolbar">
-      <h2>Speed Test</h2>
-      <button class="btn" id="speed-load-btn">Load Devices</button>
-      <button class="btn primary hidden" id="speed-start-btn">Test Selected</button>
-    </div>
-    <div class="statusbar" id="speed-status">Load devices, then select which to test.</div>
-    <div class="tbl-wrap hidden" id="speed-table-wrap">
-      <table>
-        <thead><tr>
-          <th><input type="checkbox" id="speed-chk-all"></th>
-          <th>Slot</th><th>Device</th><th>Size</th><th>Serial</th><th>Model</th><th>Read Speed</th>
-        </tr></thead>
-        <tbody id="speed-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ===== SLOTS ===== -->
-  <div id="tab-slots" class="tab-content">
-    <div class="toolbar">
-      <h2>Slot Status</h2>
+      <h2>Slot Command Center</h2>
       <button class="btn" id="slots-refresh-btn">Refresh</button>
+      <button class="btn" id="slots-health-btn">Show Health</button>
+      <button class="btn" id="slot-select-present-btn">Select Present</button>
+      <button class="btn" id="slot-select-invert-btn">Invert</button>
+      <span class="toolbar-spacer"></span>
+      <button class="btn" id="slot-clear-selection-btn" disabled>Clear Selection</button>
     </div>
-    <div class="statusbar" id="slots-status">Press Refresh to load slot status.</div>
+    <div class="slot-toolbar-hint">Hotkeys: <b>R</b> Refresh · <b>H</b> Show Health · <b>P</b> Select Present · <b>I</b> Invert · <b>C</b> Clear Selection · <b>A</b> Toggle Select All</div>
+    <div class="statusbar" id="slots-status" role="status" aria-live="polite">Loading slot status...</div>
+    <div class="r510-panel hidden" id="slots-panel-wrap">
+      <div class="r510-panel-scroll">
+        <div class="r510-chassis" id="slots-chassis">
+          <div class="r510-chassis-label">R510 · 12-Bay Front Panel</div>
+          <div class="r510-grid" id="slots-grid" aria-label="Dell R510 12-bay front panel"></div>
+        </div>
+      </div>
+    </div>
+    <div class="slot-detail-card slot-action-panel" id="slot-action-panel">
+      <div class="slot-detail-head">
+        <div class="slot-detail-title" id="slot-action-title">Select a bay</div>
+        <div class="slot-detail-head-right">
+          <div id="slot-action-presence"><span class="badge badge-dim">—</span></div>
+          <button type="button" class="btn" id="slot-action-panel-toggle" aria-expanded="true">Collapse</button>
+        </div>
+      </div>
+      <div class="slot-collapsible-body" id="slot-action-panel-body">
+      <div class="slot-detail-grid">
+        <div class="slot-detail-item">
+          <div class="slot-detail-key">Device</div>
+          <div class="slot-detail-val" id="slot-action-device"><span class="dim">—</span></div>
+        </div>
+        <div class="slot-detail-item">
+          <div class="slot-detail-key">Health</div>
+          <div class="slot-detail-val" id="slot-action-health"><span class="dim">—</span></div>
+        </div>
+        <div class="slot-detail-item">
+          <div class="slot-detail-key">Format Status</div>
+          <div class="slot-detail-val" id="slot-action-fmt"><span class="dim">—</span></div>
+        </div>
+        <div class="slot-detail-item">
+          <div class="slot-detail-key">Zeroed</div>
+          <div class="slot-detail-val" id="slot-action-zeroed"><span class="dim">—</span></div>
+        </div>
+        <div class="slot-detail-item">
+          <div class="slot-detail-key">Size</div>
+          <div class="slot-detail-val" id="slot-action-size"><span class="dim">—</span></div>
+        </div>
+        <div class="slot-detail-item">
+          <div class="slot-detail-key">Serial</div>
+          <div class="slot-detail-val" id="slot-action-serial"><span class="dim">—</span></div>
+        </div>
+        <div class="slot-detail-item">
+          <div class="slot-detail-key">Model</div>
+          <div class="slot-detail-val" id="slot-action-model"><span class="dim">—</span></div>
+        </div>
+      </div>
+      <div class="slot-detail-meta" id="slot-action-meta">Click bays or table rows to toggle selection and run operations.</div>
+      <div class="toolbar slot-action-controls">
+        <button class="btn" id="slot-run-health-btn" disabled>Health</button>
+        <button class="btn" id="slot-run-speed-btn" disabled>Speed Test</button>
+        <button class="btn danger" id="slot-run-format-btn" disabled>Format</button>
+        <button class="btn primary" id="slot-run-monitor-btn" disabled>Monitor</button>
+      </div>
+      <div class="slot-action-hint" id="slot-action-disabled-reason"></div>
+      <div class="statusbar" id="slot-action-status" role="status" aria-live="polite">Click a bay or table row to select or unselect it.</div>
+      <div class="slot-collapsible" id="slot-last-results-wrap">
+        <div class="slot-collapsible-head">
+          <div class="slot-collapsible-title">Last Results</div>
+        </div>
+        <div class="slot-action-results">
+          <div class="slot-result-card">
+            <div class="slot-result-label">Last Health</div>
+            <div class="slot-result-value" id="slot-health-result"><span class="dim">—</span></div>
+            <div class="slot-result-meta" id="slot-health-meta"></div>
+          </div>
+          <div class="slot-result-card">
+            <div class="slot-result-label">Last Speed Test</div>
+            <div class="slot-result-value" id="slot-speed-result"><span class="dim">Not tested</span></div>
+            <div class="slot-result-meta" id="slot-speed-meta"></div>
+          </div>
+          <div class="slot-result-card">
+            <div class="slot-result-label">Last Format State</div>
+            <div class="slot-result-value" id="slot-format-result"><span class="dim">Not started</span></div>
+            <div class="slot-result-meta" id="slot-format-meta"></div>
+          </div>
+        </div>
+      </div>
+      </div>
+      <div class="slot-speed-run hidden" id="slot-speed-run-wrap">
+        <div class="slot-speed-run-head">
+          <div class="slot-speed-run-title">Speed Results (Latest Run)</div>
+          <div class="slot-speed-run-head-right">
+            <div class="slot-speed-run-meta" id="slot-speed-run-meta">No speed test run yet.</div>
+            <button type="button" class="btn" id="slot-speed-run-toggle" aria-expanded="true">Collapse</button>
+          </div>
+        </div>
+        <div class="slot-collapsible-body" id="slot-speed-run-body">
+          <div class="slot-speed-run-summary" id="slot-speed-run-summary"></div>
+          <div class="slot-speed-run-rows" id="slot-speed-run-rows"></div>
+        </div>
+      </div>
+      <div class="slot-monitor hidden" id="slot-monitor-wrap">
+        <div class="slot-collapsible-head">
+          <div class="slot-collapsible-title">Format Monitor</div>
+          <button type="button" class="btn" id="slot-monitor-toggle" aria-expanded="true">Collapse</button>
+        </div>
+        <div class="slot-collapsible-body" id="slot-monitor-body">
+          <div class="slot-monitor-controls">
+            <button class="btn warn" id="slot-monitor-pause-btn" disabled>Pause</button>
+            <button class="btn" id="slot-monitor-poll-btn" disabled>Poll Now</button>
+            <span class="interval-ctrl">
+              Interval:
+              <button class="btn" id="slot-monitor-int-minus">−</button>
+              <span id="slot-monitor-interval-val">5</span>s
+              <button class="btn" id="slot-monitor-int-plus">+</button>
+            </span>
+            <button class="btn danger" id="slot-monitor-stop-btn" disabled>Cancel Polling</button>
+            <span class="slot-monitor-polling-state" id="slot-monitor-polling-state">Polling: stopped</span>
+          </div>
+          <div class="slot-monitor-stats">
+            <div class="slot-monitor-stat">
+              <span class="k">State</span>
+              <span id="slot-monitor-state"><span class="badge badge-dim">idle</span></span>
+            </div>
+            <div class="slot-monitor-stat">
+              <span class="k">Progress</span>
+              <div class="prog-wrap"><div id="slot-monitor-bar-fill" class="prog-fill" style="width:0%"></div></div>
+            </div>
+            <div class="slot-monitor-stat">
+              <span class="k">%</span>
+              <span id="slot-monitor-pct">—</span>
+            </div>
+            <div class="slot-monitor-stat">
+              <span class="k">Elapsed</span>
+              <span id="slot-monitor-elapsed">—</span>
+            </div>
+            <div class="slot-monitor-stat">
+              <span class="k">ETA</span>
+              <span id="slot-monitor-eta">—</span>
+            </div>
+          </div>
+          <div class="slot-monitor-summary" id="slot-monitor-summary"></div>
+          <div class="slot-monitor-rows" id="slot-monitor-rows"></div>
+        </div>
+      </div>
+    </div>
     <div class="tbl-wrap hidden" id="slots-table-wrap">
       <table>
+        <colgroup>
+          <col style="width:32px">
+          <col style="width:52px">
+          <col style="width:110px">
+          <col style="width:80px">
+          <col style="width:100px">
+          <col style="width:100px">
+          <col style="width:110px">
+          <col style="width:130px">
+          <col style="width:160px">
+          <col>
+        </colgroup>
         <thead><tr>
-          <th>Slot</th><th>Status</th><th>Fmt</th>
+          <th class="slots-table-select-col"><input type="checkbox" id="slots-select-all" aria-label="Select all slots"></th>
+          <th>Slot</th><th>Status</th><th>Health</th><th>Fmt</th><th>Zero</th>
           <th>Device</th><th>Serial</th><th>Model</th>
+          <th class="slots-table-actions-col">Actions</th>
         </tr></thead>
         <tbody id="slots-tbody"></tbody>
       </table>
     </div>
+    <div style="margin-top:8px;display:flex;justify-content:flex-end;">
+      <button class="btn" id="slots-export-excel-btn">Export Excel</button>
+    </div>
   </div>
+  </section>
 
-</main>
+  <section id="section-logs" class="op-section hidden">
+    <div id="tab-logs" class="tab-content active">
+      <div class="toolbar">
+        <h2>Logs</h2>
+        <button class="btn" id="logs-refresh-btn">Refresh Logs</button>
+        <span class="toolbar-spacer"></span>
+        <span class="dim" id="logs-source">Source: —</span>
+      </div>
+      <div class="statusbar" id="logs-status">Open Logs tab to load logs.</div>
+      <div class="logs-meta">Last refresh: <span id="logs-fetched-at">—</span></div>
+      <div class="logs-controls">
+        <select id="logs-event-filter" class="logs-select" aria-label="Filter logs by event">
+          <option value="All">All Events</option>
+          <option value="FORMAT_STARTED">FORMAT_STARTED</option>
+          <option value="FORMAT_COMPLETE">FORMAT_COMPLETE</option>
+          <option value="FORMAT_COMPLETE_FMT_TIMEOUT">FORMAT_COMPLETE_FMT_TIMEOUT</option>
+          <option value="FORMAT_FAILED">FORMAT_FAILED</option>
+          <option value="FORMAT_START_FAILED">FORMAT_START_FAILED</option>
+          <option value="FORMAT_ABORTED">FORMAT_ABORTED</option>
+          <option value="HEALTH">HEALTH</option>
+          <option value="SPEEDTEST">SPEEDTEST</option>
+          <option value="MISSING_SLOTS">MISSING_SLOTS</option>
+          <option value="RAW">RAW</option>
+        </select>
+        <input id="logs-search" class="logs-input" type="text" placeholder="Search serial/dev/model/raw..." aria-label="Search log rows">
+        <button class="btn" id="logs-clear-filters" type="button">Clear Filters</button>
+      </div>
+      <div class="logs-table-wrap hidden" id="logs-table-wrap">
+        <table id="logs-table" class="logs-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Level</th>
+              <th>Event</th>
+              <th>Serial</th>
+              <th>Device</th>
+              <th>Summary</th>
+              <th>Raw</th>
+            </tr>
+          </thead>
+          <tbody id="logs-table-body"></tbody>
+        </table>
+      </div>
+      <div class="logs-empty" id="logs-empty">No logs loaded.</div>
+    </div>
+  </section>
 
-<!-- ===== CONFIRM MODAL ===== -->
-<div class="modal-bg" id="confirm-modal">
+<!-- Custom confirm modal -->
+<div class="modal-bg" id="confirm-modal-bg" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
   <div class="modal">
-    <h3>⚠ Confirm Format</h3>
-    <p>This will <strong>PERMANENTLY ERASE</strong> all data on the following devices. This cannot be undone.</p>
-    <div class="dev-list" id="confirm-dev-list"></div>
-    <p>Type <strong>YES</strong> to confirm:</p>
-    <input type="text" id="confirm-input" placeholder="YES" autocomplete="off">
+    <h3 id="confirm-modal-title">Confirm</h3>
+    <p id="confirm-modal-message"></p>
+    <div class="dev-list" id="confirm-modal-devlist"></div>
     <div class="modal-actions">
-      <button class="btn" id="confirm-cancel-btn">Cancel</button>
-      <button class="btn danger" id="confirm-ok-btn">Format Now</button>
+      <button class="btn" id="confirm-modal-cancel" type="button">Cancel</button>
+      <button class="btn danger" id="confirm-modal-confirm" type="button">Confirm</button>
     </div>
   </div>
 </div>
 
+</main>
+
+<script src="/static/xlsx-js-style.min.js"></script>
 <script>
-// ---------------------------------------------------------------------------
-// Utilities
-// ---------------------------------------------------------------------------
 const $ = id => document.getElementById(id);
+const TERMINAL_STATUSES = new Set(['done', 'done_nostart', 'failed', 'lost']);
+const STATUS_DEDUPE_MS = 2000;
+const LOGS_LINE_LIMIT = 500;
+const TAB_SLOTS = 'slots';
+const TAB_LOGS = 'logs';
+const statusCache = {};
+let slotsLoading = false;
+let globalActionBusy = false;
+let confirmDialogOpen = false;
+let lastRowCheckboxSlot = null;
+let activeMainTab = TAB_SLOTS;
+let logsLoadedOnce = false;
+let logsLoading = false;
+let logsRows = [];
+let logsFilterEvent = 'All';
+let logsFilterQuery = '';
+let logsTotalCount = 0;
+let logsExpandedRaw = new Set();
+let logsSearchDebounceId = null;
+let formatLogBySerial = {};
 
 function setStatus(id, msg, cls) {
+  const now = Date.now();
+  const prev = statusCache[id];
+  const clsKey = cls || '';
+  if (prev && prev.msg === msg && prev.cls === clsKey && (now - prev.at) < STATUS_DEDUPE_MS) {
+    return;
+  }
+  statusCache[id] = { msg, cls: clsKey, at: now };
   const e = $(id);
   e.className = 'statusbar' + (cls ? ' ' + cls : '');
   e.innerHTML = msg;
 }
 
 function fmtDuration(secs) {
-  secs = Math.max(0, Math.floor(secs));
+  secs = Math.max(0, Math.floor(Number(secs) || 0));
   const h = Math.floor(secs / 3600), rem = secs % 3600;
   const m = Math.floor(rem / 60), s = rem % 60;
   if (h) return `${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
   if (m) return `${m}m ${String(s).padStart(2,'0')}s`;
   return `${s}s`;
+}
+
+function fmtTimestamp(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  if (!Number.isFinite(d.getTime())) return String(ts);
+  return d.toLocaleString();
+}
+
+function showToast(msg, type, durationMs) {
+  const container = $('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast${type ? ' ' + type : ''}`;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  const delay = durationMs || 5000;
+  setTimeout(() => {
+    toast.style.transition = 'opacity 0.3s, transform 0.3s';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(16px)';
+    setTimeout(() => toast.remove(), 320);
+  }, delay);
+}
+
+function showConfirmDialog(title, message, devLines) {
+  return new Promise(resolve => {
+    $('confirm-modal-title').textContent = title;
+    $('confirm-modal-message').textContent = message;
+    $('confirm-modal-devlist').textContent = devLines;
+    const bg = $('confirm-modal-bg');
+    bg.classList.add('open');
+
+    function cleanup(result) {
+      bg.classList.remove('open');
+      $('confirm-modal-confirm').removeEventListener('click', onConfirm);
+      $('confirm-modal-cancel').removeEventListener('click', onCancel);
+      bg.removeEventListener('click', onBgClick);
+      confirmDialogOpen = false;
+      resolve(result);
+    }
+    function onConfirm() { cleanup(true); }
+    function onCancel() { cleanup(false); }
+    function onBgClick(e) { if (e.target === bg) cleanup(false); }
+
+    confirmDialogOpen = true;
+    $('confirm-modal-confirm').addEventListener('click', onConfirm);
+    $('confirm-modal-cancel').addEventListener('click', onCancel);
+    bg.addEventListener('click', onBgClick);
+  });
+}
+
+let _elapsedTimerId = null;
+let _elapsedStart = null;
+
+function startElapsedTimer(updateFn) {
+  _elapsedStart = Date.now();
+  if (_elapsedTimerId) clearInterval(_elapsedTimerId);
+  _elapsedTimerId = setInterval(() => {
+    const secs = Math.floor((Date.now() - _elapsedStart) / 1000);
+    updateFn(secs);
+  }, 1000);
+}
+
+function stopElapsedTimer() {
+  if (_elapsedTimerId) clearInterval(_elapsedTimerId);
+  _elapsedTimerId = null;
+  _elapsedStart = null;
+}
+
+function refreshSlotsQuietly() {
+  fetch('/api/missing').then(r => r.json())
+    .then(data => {
+      if (data.error || !data.slots) return;
+      slotsData = normalizeSlots(data.slots).map(applyHealthOverlay);
+      renderAll();
+    })
+    .catch(() => {});
 }
 
 function fmtBadge(fmt_status, zeroed) {
@@ -414,17 +1466,25 @@ function fmtBadge(fmt_status, zeroed) {
   return `<span class="badge badge-dim">?</span>`;
 }
 
+function zeroedBadge(zeroed) {
+  if (zeroed === 'zero') return '<span class="badge badge-green">zeroed</span>';
+  if (zeroed === 'data') return '<span class="badge badge-yellow">has data</span>';
+  return '<span class="dim">—</span>';
+}
+
 function healthBadge(h) {
-  if (!h || h === '?' || h === '--' || h === 'Unknown')
+  if (!h || h === '?' || h === '--' || h === 'Unknown') {
     return `<span class="badge badge-dim">${h || '?'}</span>`;
+  }
   const v = parseFloat(h);
   if (isNaN(v)) return `<span class="badge badge-dim">${h}</span>`;
-  return `<span class="badge ${v >= 90 ? 'badge-green' : 'badge-red'}">${v}%</span>`;
+  return `<span class="badge ${v > 90 ? 'badge-green' : 'badge-red'}">${v}%</span>`;
 }
 
 function speedBadge(speed) {
-  if (!speed || ['?','timeout','no data','error'].includes(speed))
+  if (!speed || ['?','timeout','no data','error'].includes(speed)) {
     return `<span class="badge badge-red">${speed || '?'}</span>`;
+  }
   const m = speed.match(/([\d.]+)/);
   if (!m) return `<span class="badge badge-yellow">${speed}</span>`;
   return `<span class="badge ${parseFloat(m[1]) >= 100 ? 'badge-green' : 'badge-yellow'}">${speed}</span>`;
@@ -438,438 +1498,2041 @@ function postJSON(url, body) {
   }).then(r => r.json());
 }
 
-// ---------------------------------------------------------------------------
-// Tab switching
-// ---------------------------------------------------------------------------
-document.querySelectorAll('nav button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    $(`tab-${btn.dataset.tab}`).classList.add('active');
+function monitorPollControl(action) {
+  return postJSON(`/api/format/poll/${action}`, {}).then(data => {
+    if (data && data.error) throw new Error(data.error);
+    return data || {};
   });
-});
-
-// ---------------------------------------------------------------------------
-// HEALTH TAB — simple POST, blocking
-// ---------------------------------------------------------------------------
-$('health-scan-btn').addEventListener('click', () => {
-  const btn = $('health-scan-btn');
-  btn.disabled = true;
-  $('health-table-wrap').classList.add('hidden');
-  setStatus('health-status', '<span class="spin"></span> Scanning (this may take a minute)...', 'info');
-
-  postJSON('/api/health', {})
-    .then(data => {
-      if (data.error) {
-        setStatus('health-status', `✗ ${data.error}`, 'error');
-        return;
-      }
-      if (!data.devices || data.devices.length === 0) {
-        setStatus('health-status', data.message || 'No disks found.', '');
-        return;
-      }
-      renderHealthTable(data.devices);
-      const warn = data.rc !== 0 ? `  <span style="color:var(--yellow-bright)">(exit ${data.rc})</span>` : '';
-      setStatus('health-status', `✓ Done in ${fmtDuration(data.elapsed)} — ${data.devices.length} device(s)${warn}`, 'success');
-      $('health-table-wrap').classList.remove('hidden');
-    })
-    .catch(err => setStatus('health-status', `✗ ${err.message}`, 'error'))
-    .finally(() => { btn.disabled = false; });
-});
-
-function renderHealthTable(devices) {
-  $('health-tbody').innerHTML = devices.map(d => `
-    <tr>
-      <td class="cyan">${d.slot}</td>
-      <td class="dim">${d.path}</td>
-      <td>${d.size || '—'}</td>
-      <td>${fmtBadge(d.fmt_status, d.zeroed)}</td>
-      <td>${healthBadge(d.health)}</td>
-      <td>${d.serial || '<span class="dim">N/A</span>'}</td>
-      <td>${d.model || '<span class="dim">unknown</span>'}</td>
-    </tr>`).join('');
 }
 
-// ---------------------------------------------------------------------------
-// FORMAT TAB
-// ---------------------------------------------------------------------------
-let formatDevices = [];
-
-function loadFormatDevices() {
-  const btn = $('format-refresh-btn');
-  btn.disabled = true;
-  $('format-table-wrap').classList.add('hidden');
-  $('format-start-btn').disabled = true;
-  setStatus('format-status', '<span class="spin"></span> Loading...', 'info');
-
-  fetch('/api/discover').then(r => r.json())
-    .then(devs => {
-      formatDevices = devs;
-      renderFormatTable(devs);
-      setStatus('format-status', `${devs.length} device(s) found.`, 'success');
-      $('format-table-wrap').classList.remove('hidden');
-    })
-    .catch(err => setStatus('format-status', `✗ ${err.message}`, 'error'))
-    .finally(() => { btn.disabled = false; });
+function getJSON(url) {
+  return fetch(url).then(async r => {
+    let data = null;
+    try {
+      data = await r.json();
+    } catch (_) {
+      data = null;
+    }
+    const failed = !r.ok || !data || data.error || data.ok === false;
+    if (failed) {
+      const err = new Error((data && data.error) ? data.error : `Request failed (${r.status})`);
+      err.status = r.status;
+      err.data = data || {};
+      throw err;
+    }
+    return data;
+  });
 }
 
-function renderFormatTable(devices) {
-  $('format-tbody').innerHTML = devices.map((d, i) => `
-    <tr>
-      <td><input type="checkbox" class="fmt-chk" data-idx="${i}"></td>
-      <td class="cyan">${d.slot}</td>
-      <td class="dim">${d.path}</td>
-      <td>${d.size || '—'}</td>
-      <td>${fmtBadge(d.fmt_status, d.zeroed)}</td>
-      <td>${d.serial || '<span class="dim">N/A</span>'}</td>
-      <td>${d.model || '<span class="dim">unknown</span>'}</td>
-    </tr>`).join('');
-  document.querySelectorAll('.fmt-chk').forEach(c => c.addEventListener('change', updateFmtBtn));
+let slotsData = [];
+let selectedSlots = new Set();
+let primarySlot = null;
+let healthByPath = {};
+let healthLoadedAt = null;
+
+let slotActionState = {
+  runningAction: null,
+  speedResultsBySlot: {},
+  speedLastRun: null,
+  formatResults: {},
+  healthResults: {},
+};
+
+let monitorState = {
+  active: false,
+  paused: false,
+  polling: false,
+  interval: 5,
+  timerId: null,
+  paths: [],
+  activePaths: new Set(),
+  latestByPath: {},
+};
+
+const collapsibleSections = {
+  slotActionPanel: { bodyId: 'slot-action-panel-body', toggleId: 'slot-action-panel-toggle' },
+  speedRun: { bodyId: 'slot-speed-run-body', toggleId: 'slot-speed-run-toggle' },
+  monitor: { bodyId: 'slot-monitor-body', toggleId: 'slot-monitor-toggle' },
+};
+
+const collapsibleState = {
+  slotActionPanel: true,
+  speedRun: true,
+  monitor: true,
+};
+
+function escapeHtml(v) {
+  return String(v ?? '').replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
-function updateFmtBtn() {
-  $('format-start-btn').disabled = !document.querySelectorAll('.fmt-chk:checked').length;
+function normalizeSlots(slots) {
+  const bySlot = new Map();
+  (slots || []).forEach(s => {
+    const slot = Number(s.slot);
+    if (Number.isInteger(slot)) bySlot.set(slot, s);
+  });
+  const normalized = [];
+  for (let slot = 0; slot < 12; slot += 1) {
+    normalized.push(bySlot.get(slot) || { slot, status: 'MISSING', device: null });
+  }
+  return normalized.map(applyHealthOverlay);
 }
 
-$('format-refresh-btn').addEventListener('click', loadFormatDevices);
+function applyHealthOverlay(slotObj) {
+  const d = slotObj && slotObj.device;
+  if (!d || !d.path) return slotObj;
+  const h = healthByPath[d.path];
+  if (h === undefined || h === null || h === '') return slotObj;
+  return { ...slotObj, device: { ...d, health: h } };
+}
 
-$('format-selall-btn').addEventListener('click', () => {
-  const chks = document.querySelectorAll('.fmt-chk');
-  const all = [...chks].every(c => c.checked);
-  chks.forEach(c => c.checked = !all);
-  updateFmtBtn();
-});
+function slotHealthNumber(slotObj) {
+  const h = slotObj && slotObj.device ? slotObj.device.health : null;
+  if (!h || h === '?' || h === '--' || h === 'Unknown') return null;
+  const v = parseFloat(h);
+  return Number.isFinite(v) ? v : null;
+}
 
-$('format-chk-all').addEventListener('change', e => {
-  document.querySelectorAll('.fmt-chk').forEach(c => c.checked = e.target.checked);
-  updateFmtBtn();
-});
+function slotVisualState(slotObj) {
+  if (!slotObj || slotObj.status !== 'PRESENT' || !slotObj.device) return 'red';
+  const hv = slotHealthNumber(slotObj);
+  if (hv !== null) return hv > 90 ? 'green' : 'yellow';
+  const d = slotObj.device;
+  return d.fmt_status === '512' && d.zeroed !== 'data' ? 'green' : 'yellow';
+}
 
-$('format-start-btn').addEventListener('click', () => {
-  const selected = [...document.querySelectorAll('.fmt-chk:checked')].map(c => formatDevices[+c.dataset.idx]);
-  if (!selected.length) return;
-  $('confirm-dev-list').innerHTML = selected.map(d =>
-    `<div><span class="cyan">${d.path}</span>  <span class="dim">${d.model || 'unknown'}</span>  s/n: ${d.serial || 'N/A'}</div>`
-  ).join('');
-  $('confirm-input').value = '';
-  $('confirm-input').classList.remove('bad');
-  $('confirm-modal').classList.add('open');
-  $('confirm-input').focus();
-});
+function slotConditionBadge(slotObj) {
+  if (!slotObj || slotObj.status !== 'PRESENT') return '<span class="badge badge-red">MISSING</span>';
+  const visual = slotVisualState(slotObj);
+  if (visual === 'green') return '<span class="badge badge-green">PRESENT</span>';
+  return '<span class="badge badge-yellow">WARNING</span>';
+}
 
-$('confirm-cancel-btn').addEventListener('click', () => $('confirm-modal').classList.remove('open'));
-$('confirm-modal').addEventListener('click', e => { if (e.target === $('confirm-modal')) $('confirm-modal').classList.remove('open'); });
-$('confirm-ok-btn').addEventListener('click', doFormat);
-$('confirm-input').addEventListener('keydown', e => { if (e.key === 'Enter') doFormat(); });
+function slotPresenceBadge(slotObj) {
+  if (!slotObj || slotObj.status !== 'PRESENT') return '<span class="badge badge-red">MISSING</span>';
+  return '<span class="badge badge-green">PRESENT</span>';
+}
 
-function doFormat() {
-  if ($('confirm-input').value.trim() !== 'YES') {
-    $('confirm-input').classList.add('bad');
-    $('confirm-input').focus();
+function slotHealthText(slotObj) {
+  const hv = slotHealthNumber(slotObj);
+  if (hv === null) return '';
+  return `${Math.round(hv)}%`;
+}
+
+function formatStateText(state) {
+  if (state === 'done_nostart') return 'done/not started';
+  if (state === 'done') return 'done';
+  if (state === 'failed' || state === 'lost' || state === 'failed_start') return 'failed';
+  if (state === 'started' || state === 'formatting' || state === 'waiting') return 'formatting';
+  return String(state || 'unknown');
+}
+
+function formatStateBadge(state) {
+  if (state === 'done_nostart') return '<span class="badge badge-green">done/not started</span>';
+  if (state === 'done') return '<span class="badge badge-green">done</span>';
+  if (state === 'failed' || state === 'lost' || state === 'failed_start') return '<span class="badge badge-red">failed</span>';
+  if (state === 'started' || state === 'formatting' || state === 'waiting') return '<span class="badge badge-yellow">formatting</span>';
+  return '<span class="badge badge-dim">unknown</span>';
+}
+
+function monitorStatusBadge(status) {
+  if (status === 'done_nostart') return '<span class="badge badge-green">done/not started</span>';
+  if (status === 'done') return '<span class="badge badge-green">done</span>';
+  if (status === 'failed' || status === 'lost') return `<span class="badge badge-red">${status}</span>`;
+  if (status === 'formatting' || status === 'started') return '<span class="badge badge-yellow">formatting</span>';
+  if (status === 'waiting') return '<span class="badge badge-dim">waiting</span>';
+  return `<span class="badge badge-dim">${escapeHtml(status || 'unknown')}</span>`;
+}
+
+function isSpeedUnavailable(speed) {
+  const v = String(speed || '').trim().toLowerCase();
+  return !v || v === '?' || v === 'timeout' || v === 'no data' || v === 'error';
+}
+
+function applySectionCollapse(sectionKey) {
+  const spec = collapsibleSections[sectionKey];
+  if (!spec) return;
+  const body = $(spec.bodyId);
+  const btn = $(spec.toggleId);
+  const expanded = !!collapsibleState[sectionKey];
+  if (body) {
+    if (expanded) {
+      body.style.overflow = 'hidden';
+      body.style.maxHeight = body.scrollHeight + 'px';
+      body.style.opacity = '1';
+      body.style.transition = 'max-height 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease';
+      // After transition completes, allow natural height
+      setTimeout(() => { body.style.maxHeight = 'none'; body.style.overflow = ''; }, 320);
+    } else {
+      // First set to current height so transition starts from real value
+      body.style.maxHeight = body.scrollHeight + 'px';
+      body.style.overflow = 'hidden';
+      body.style.transition = 'max-height 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease';
+      requestAnimationFrame(() => {
+        body.style.maxHeight = '0';
+        body.style.opacity = '0';
+      });
+    }
+  }
+  if (btn) {
+    btn.textContent = expanded ? 'Collapse' : 'Expand';
+    btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  }
+}
+
+function toggleSectionCollapse(sectionKey) {
+  if (!(sectionKey in collapsibleState)) return;
+  collapsibleState[sectionKey] = !collapsibleState[sectionKey];
+  applySectionCollapse(sectionKey);
+}
+
+function renderSpeedLastRunPanel() {
+  const run = slotActionState.speedLastRun;
+  const wrapEl = $('slot-speed-run-wrap');
+  const summaryEl = $('slot-speed-run-summary');
+  const rowsEl = $('slot-speed-run-rows');
+  const metaEl = $('slot-speed-run-meta');
+  const rows = run && Array.isArray(run.rows) ? run.rows : [];
+
+  if (!rows.length) {
+    if (wrapEl) wrapEl.classList.add('hidden');
+    if (metaEl) metaEl.textContent = '';
+    if (summaryEl) summaryEl.innerHTML = '';
+    if (rowsEl) rowsEl.innerHTML = '';
     return;
   }
-  $('confirm-modal').classList.remove('open');
 
-  const selected = [...document.querySelectorAll('.fmt-chk:checked')].map(c => formatDevices[+c.dataset.idx]);
-  setStatus('format-status', '<span class="spin"></span> Launching format...', 'info');
-  $('format-start-btn').disabled = true;
+  if (wrapEl) wrapEl.classList.remove('hidden');
 
-  postJSON('/api/format/start', { devices: selected.map(d => d.path) })
+  const nTotal = rows.length;
+  const nWithSpeed = rows.filter(r => !isSpeedUnavailable(r.speed)).length;
+  const nUnavailable = Math.max(0, nTotal - nWithSpeed);
+  const startedAt = run.startedAt ? new Date(run.startedAt) : null;
+  const finishedAt = run.finishedAt ? new Date(run.finishedAt) : null;
+  const elapsed = startedAt && finishedAt
+    ? Math.max(0, Math.round((finishedAt.getTime() - startedAt.getTime()) / 1000))
+    : null;
+
+  metaEl.textContent = finishedAt && Number.isFinite(finishedAt.getTime())
+    ? `Finished ${finishedAt.toLocaleTimeString()}${elapsed !== null ? ` · ${fmtDuration(elapsed)}` : ''}`
+    : 'Latest speed run';
+
+  summaryEl.innerHTML = `
+    <div class="slot-monitor-chip"><span class="k">Total</span>${nTotal}</div>
+    <div class="slot-monitor-chip"><span class="k">With Speed</span>${nWithSpeed}</div>
+    <div class="slot-monitor-chip"><span class="k">Unavailable</span>${nUnavailable}</div>
+  `;
+
+  const bodyRows = rows.map(r => {
+    const slotLabel = Number.isInteger(Number(r.slot)) ? `Slot ${r.slot}` : 'Slot ?';
+    const testedAt = r.at ? new Date(r.at) : null;
+    const testedText = testedAt && Number.isFinite(testedAt.getTime()) ? testedAt.toLocaleTimeString() : '—';
+    return `<div class="slot-speed-run-row">
+      <div>${slotLabel}</div>
+      <div class="path" title="${escapeHtml(r.device || '')}">${escapeHtml(r.device || '—')}</div>
+      <div>${speedBadge(r.speed || '?')}</div>
+      <div>${escapeHtml(testedText)}</div>
+    </div>`;
+  }).join('');
+
+  rowsEl.innerHTML = `
+    <div class="slot-speed-run-row head">
+      <div>Slot</div>
+      <div>Device</div>
+      <div>Speed</div>
+      <div>Tested</div>
+    </div>
+    ${bodyRows}
+  `;
+}
+
+function normalizeSerial(v) {
+  return String(v || '').trim().toUpperCase();
+}
+
+function formatStateFromLogEvent(event) {
+  if (event === 'FORMAT_COMPLETE' || event === 'FORMAT_COMPLETE_FMT_TIMEOUT') return 'done';
+  if (event === 'FORMAT_FAILED' || event === 'FORMAT_LOST' || event === 'FORMAT_START_FAILED') return 'failed';
+  if (event === 'FORMAT_STARTED') return 'started';
+  return null;
+}
+
+function parseFormatEventFromLogLine(line, indexInWindow) {
+  const text = String(line || '');
+  const withTs = text.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})(?:,\d+)?\s+\w+\s+(.*)$/);
+  const message = withTs ? withTs[2] : text;
+  const timeIso = withTs ? withTs[1].replace(' ', 'T') : null;
+
+  const eventMatch = message.match(/\b(FORMAT_COMPLETE_FMT_TIMEOUT|FORMAT_COMPLETE|FORMAT_FAILED|FORMAT_LOST|FORMAT_START_FAILED|FORMAT_STARTED)\b/);
+  if (!eventMatch) return null;
+  const serialMatch = message.match(/\bserial=([^\s]*)/);
+  const serial = normalizeSerial(serialMatch ? serialMatch[1] : '');
+  if (!serial) return null;
+
+  const state = formatStateFromLogEvent(eventMatch[1]);
+  if (!state) return null;
+  return {
+    serial,
+    state,
+    detail: eventMatch[1].replace(/^FORMAT_/, '').toLowerCase().replace(/_/g, ' '),
+    at: timeIso,
+    rank: Number(indexInWindow) || 0,
+  };
+}
+
+function rebuildFormatHistoryFromLogLines(lines) {
+  const map = {};
+  const list = Array.isArray(lines) ? lines : [];
+  list.forEach((line, idx) => {
+    const ev = parseFormatEventFromLogLine(line, idx);
+    if (!ev) return;
+    const prev = map[ev.serial];
+    if (!prev) {
+      map[ev.serial] = ev;
+      return;
+    }
+    const prevTs = prev.at ? Date.parse(prev.at) : NaN;
+    const nextTs = ev.at ? Date.parse(ev.at) : NaN;
+    if (Number.isFinite(nextTs) && Number.isFinite(prevTs)) {
+      if (nextTs >= prevTs) map[ev.serial] = ev;
+      return;
+    }
+    if (Number.isFinite(nextTs) && !Number.isFinite(prevTs)) {
+      map[ev.serial] = ev;
+      return;
+    }
+    if (!Number.isFinite(nextTs) && !Number.isFinite(prevTs) && ev.rank >= prev.rank) {
+      map[ev.serial] = ev;
+    }
+  });
+  formatLogBySerial = map;
+}
+
+function getFormatHistoryForSerial(serial) {
+  const key = normalizeSerial(serial);
+  if (!key) return null;
+  return formatLogBySerial[key] || null;
+}
+
+function refreshFormatHistoryFromLogs() {
+  if (logsLoading) return Promise.resolve();
+  return getJSON('/api/logs')
     .then(data => {
-      const failN = (data.failed || []).length;
-      let msg = `Format launched for: ${(data.started || []).join(', ') || 'none'}`;
-      if (failN) msg += `  <span style="color:var(--red-bright)">${failN} failed</span>`;
-      setStatus('format-status', msg, 'success');
-      if (data.started && data.started.length > 0) {
-        document.querySelector('nav button[data-tab="progress"]').click();
-        startProgressMonitor(data.started);
-      }
+      const lines = Array.isArray(data.lines) ? data.lines : [];
+      rebuildFormatHistoryFromLogLines(lines);
     })
-    .catch(err => {
-      setStatus('format-status', `✗ ${err.message}`, 'error');
-      $('format-start-btn').disabled = false;
+    .catch(() => {
+      // Keep the last known cache if logs are temporarily unavailable.
     });
 }
 
-// ---------------------------------------------------------------------------
-// PROGRESS TAB — polls REST endpoint
-// ---------------------------------------------------------------------------
-let progDevices = [];
-let progMonitoring = false;
-let progPaused = false;
-let progInterval = 5;
-let progTimerId = null;
-let progMonitoredPaths = [];
+const KNOWN_LOG_EVENTS = new Set([
+  'FORMAT_STARTED',
+  'FORMAT_COMPLETE',
+  'FORMAT_COMPLETE_FMT_TIMEOUT',
+  'FORMAT_FAILED',
+  'FORMAT_START_FAILED',
+  'FORMAT_ABORTED',
+  'HEALTH',
+  'SPEEDTEST',
+  'MISSING_SLOTS',
+]);
 
-$('prog-load-btn').addEventListener('click', () => {
-  const btn = $('prog-load-btn');
-  btn.disabled = true;
-  $('prog-table-wrap').classList.add('hidden');
-  $('prog-monitor-btn').classList.add('hidden');
-  setStatus('prog-status', '<span class="spin"></span> Loading...', 'info');
-
-  fetch('/api/discover').then(r => r.json())
-    .then(devs => {
-      progDevices = devs;
-      renderProgSelectionTable(devs);
-      setStatus('prog-status', `${devs.length} device(s) found. Select to monitor.`, 'success');
-      $('prog-table-wrap').classList.remove('hidden');
-      $('prog-monitor-btn').classList.remove('hidden');
-    })
-    .catch(err => setStatus('prog-status', `✗ ${err.message}`, 'error'))
-    .finally(() => { btn.disabled = false; });
-});
-
-function renderProgSelectionTable(devices) {
-  if (progMonitoring) return;
-  $('prog-thead-row').innerHTML = `
-    <th><input type="checkbox" id="prog-chk-all"></th>
-    <th>Slot</th><th>Device</th><th>Serial</th><th>Model</th>
-  `;
-  $('prog-chk-all').addEventListener('change', e => {
-    document.querySelectorAll('.prog-chk').forEach(c => c.checked = e.target.checked);
-  });
-  $('prog-tbody').innerHTML = devices.map((d, i) => `
-    <tr>
-      <td><input type="checkbox" class="prog-chk" data-idx="${i}" checked></td>
-      <td class="cyan">${d.slot}</td>
-      <td class="dim">${d.path}</td>
-      <td>${d.serial || '<span class="dim">N/A</span>'}</td>
-      <td>${d.model || '<span class="dim">unknown</span>'}</td>
-    </tr>`).join('');
+function parseLogPrefix(line) {
+  const text = String(line || '');
+  const m = text.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})(?:,(\d+))?\s+([A-Z]+)\s+(.*)$/);
+  if (!m) {
+    return { tsIso: null, tsDisplay: '—', level: '', message: text };
+  }
+  const ms = m[2] ? m[2].padEnd(3, '0').slice(0, 3) : '000';
+  const tsIso = `${m[1].replace(' ', 'T')}.${ms}`;
+  const parsed = new Date(tsIso);
+  const tsDisplay = Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : m[1];
+  return { tsIso, tsDisplay, level: m[3], message: m[4] };
 }
 
-$('prog-monitor-btn').addEventListener('click', () => {
-  const paths = [...document.querySelectorAll('.prog-chk:checked')].map(c => progDevices[+c.dataset.idx].path);
-  if (!paths.length) { setStatus('prog-status', 'No devices selected.', 'error'); return; }
-  startProgressMonitor(paths);
-});
+function extractLogField(message, key) {
+  const re = new RegExp(`\\b${key}=([^\\n]*?)(?=\\s+[A-Za-z_]+=|$)`);
+  const m = String(message || '').match(re);
+  return m ? m[1].trim() : '';
+}
 
-function startProgressMonitor(paths) {
-  if (progTimerId) clearInterval(progTimerId);
-  progMonitoring = true;
-  progPaused = false;
-  progInterval = 5;
-  progMonitoredPaths = paths;
-  $('prog-interval-val').textContent = progInterval;
-  $('prog-pause-btn').textContent = 'Pause';
+function parseKvMessage(message) {
+  const text = String(message || '');
+  const eventMatch = text.match(/^([A-Z_]+)\b/);
+  const event = eventMatch ? eventMatch[1] : '';
+  return {
+    event,
+    fields: {
+      slot: extractLogField(text, 'slot'),
+      dev: extractLogField(text, 'dev'),
+      model: extractLogField(text, 'model'),
+      serial: extractLogField(text, 'serial'),
+      mode: extractLogField(text, 'mode'),
+      health: extractLogField(text, 'health'),
+      count: extractLogField(text, 'count'),
+      slots: extractLogField(text, 'slots'),
+    },
+  };
+}
 
-  $('prog-load-btn').classList.add('hidden');
-  $('prog-monitor-btn').classList.add('hidden');
-  $('prog-controls').classList.remove('hidden');
-  $('prog-table-wrap').classList.remove('hidden');
+function parseSpeedReadGroups(message) {
+  const text = String(message || '');
+  const groups = [];
+  const reNew = /serial=([^\s]+)\s+dev=([^\s]+)\s+slot=([^\s]+)\s+read=(.*?)(?=\s+serial=|$)/g;
+  let m = reNew.exec(text);
+  while (m) {
+    groups.push({
+      serial: String(m[1] || '').trim(),
+      dev: String(m[2] || '').trim(),
+      slot: String(m[3] || '').trim(),
+      read: String(m[4] || '').trim(),
+    });
+    m = reNew.exec(text);
+  }
+  if (groups.length) return groups;
 
-  // Switch progress table to monitoring header
-  $('prog-thead-row').innerHTML = `
-    <th>Slot</th><th>Serial</th><th>Status</th>
-    <th>Progress</th><th>%</th><th>Elapsed</th><th>ETA</th>
-  `;
+  // Backward compatibility for older SPEEDTEST lines without serial/dev.
+  const reLegacy = /slot=([^\s]+)\s+read=([^\s]+(?:\s*(?:GB\/s|MB\/s|kB\/s))?)/g;
+  m = reLegacy.exec(text);
+  while (m) {
+    groups.push({
+      serial: '',
+      dev: '',
+      slot: String(m[1] || '').trim(),
+      read: String(m[2] || '').trim(),
+    });
+    m = reLegacy.exec(text);
+  }
+  return groups;
+}
 
-  setStatus('prog-status', `<span class="spin"></span> Monitoring ${paths.length} device(s)...`, 'info');
+function buildSpeedtestSummary(groups) {
+  const parts = (groups || []).map(g => {
+    const s = String(g.serial || '').trim();
+    const d = String(g.dev || '').trim();
+    const sl = String(g.slot || '').trim();
+    const idPart = (s && s !== '?')
+      ? s
+      : (d ? d : (sl ? `bay ${sl}` : 'unknown disk'));
+    return `${idPart} ${String(g.read || '').trim()}`.trim();
+  }).filter(Boolean);
+  return parts.length ? `Speed test: ${parts.join('; ')}` : 'Speed test result recorded';
+}
 
-  function doPoll() {
-    postJSON('/api/format/poll', { devices: paths })
-      .then(data => {
-        if (data.error) { setStatus('prog-status', `✗ ${data.error}`, 'error'); return; }
-        renderProgressRows(data.devices);
-        if (data.all_done) {
-          clearInterval(progTimerId);
-          progTimerId = null;
-          progMonitoring = false;
-          const nFail = data.devices.filter(d => d.status === 'failed' || d.status === 'lost').length;
-          $('prog-controls').classList.add('hidden');
-          $('prog-load-btn').classList.remove('hidden');
-          setStatus('prog-status', nFail
-            ? `✗ Finished — ${nFail} device(s) FAILED.`
-            : '✓ All formatting complete.', nFail ? 'error' : 'success');
-        }
-      })
-      .catch(err => setStatus('prog-status', `✗ ${err.message}`, 'error'));
+function parseLogRow(line, idx) {
+  const raw = String(line || '');
+  const pref = parseLogPrefix(raw);
+  const parsed = parseKvMessage(pref.message);
+  const slot = parsed.fields.slot || '';
+  const device = parsed.fields.dev || '';
+  const model = parsed.fields.model || '';
+  let serial = parsed.fields.serial || '';
+  const event = KNOWN_LOG_EVENTS.has(parsed.event) ? parsed.event : 'RAW';
+  const level = pref.level || (event !== 'RAW' ? 'INFO' : '');
+  const serialText = serial || 'unknown serial';
+  const devText = device || 'unknown device';
+  let summary = 'Unstructured log line';
+
+  if (event === 'FORMAT_STARTED') {
+    const mode = parsed.fields.mode || '?';
+    summary = `Format started (mode: ${mode}) for ${serialText} (${devText})`;
+  } else if (event === 'FORMAT_COMPLETE') {
+    summary = `Format completed for ${serialText} (${devText})`;
+  } else if (event === 'FORMAT_COMPLETE_FMT_TIMEOUT') {
+    summary = `Format complete (timeout while confirming) for ${serialText} (${devText})`;
+  } else if (event === 'FORMAT_FAILED') {
+    summary = `Format failed for ${serialText} (${devText})`;
+  } else if (event === 'FORMAT_START_FAILED') {
+    summary = `Format failed to start for ${serialText} (${devText})`;
+  } else if (event === 'FORMAT_ABORTED') {
+    const devListMatch = pref.message.match(/devices:\s*(.*)$/i);
+    const devCount = devListMatch && devListMatch[1]
+      ? devListMatch[1].trim().split(/\s+/).filter(Boolean).length
+      : 0;
+    summary = `Format run aborted for ${devCount} device(s)`;
+  } else if (event === 'HEALTH') {
+    const health = parsed.fields.health || '?';
+    summary = `Health check: ${health} for ${serialText} (${devText})`;
+  } else if (event === 'SPEEDTEST') {
+    const groups = parseSpeedReadGroups(pref.message);
+    if (groups.length) {
+      const serials = Array.from(new Set(
+        groups
+          .map(g => String(g.serial || '').trim())
+          .filter(v => v && v !== '?')
+      ));
+      if (!serial && serials.length) serial = serials.join(', ');
+      summary = buildSpeedtestSummary(groups);
+    } else {
+      summary = 'Speed test result recorded';
+    }
+  } else if (event === 'MISSING_SLOTS') {
+    const listed = parsed.fields.slots || '';
+    let count = parsed.fields.count;
+    if (!count && listed) {
+      count = String(listed.split(',').map(s => s.trim()).filter(Boolean).length);
+    }
+    summary = `${count || '?'} bay(s) missing`;
   }
 
-  doPoll();
-  progTimerId = setInterval(() => { if (!progPaused) doPoll(); }, progInterval * 1000);
+  const timestampMs = pref.tsIso ? Date.parse(pref.tsIso) : NaN;
+  return {
+    id: String(Number(idx) || 0),
+    timeDisplay: pref.tsDisplay,
+    level,
+    event,
+    slot,
+    device,
+    model,
+    serial,
+    summary,
+    raw,
+    timestampMs: Number.isFinite(timestampMs) ? timestampMs : NaN,
+    sourceIndex: Number(idx) || 0,
+  };
 }
 
-function renderProgressRows(devices) {
-  $('prog-tbody').innerHTML = devices.map(d => {
-    let badge, fillCls;
-    if      (d.status === 'done' || d.status === 'done_nostart')
-      { badge = '<span class="badge badge-green">done</span>';    fillCls = ''; }
-    else if (d.status === 'failed')
-      { badge = '<span class="badge badge-red">FAILED</span>';    fillCls = 'red'; }
-    else if (d.status === 'lost')
-      { badge = '<span class="badge badge-red">LOST</span>';      fillCls = 'red'; }
-    else if (d.status === 'waiting')
-      { badge = '<span class="badge badge-dim">waiting</span>';   fillCls = 'yellow'; }
-    else
-      { badge = '<span class="badge badge-yellow">formatting</span>'; fillCls = d.progress >= 50 ? '' : 'yellow'; }
+function buildLogsRows(lines) {
+  const rows = (Array.isArray(lines) ? lines : []).map((line, idx) => parseLogRow(line, idx));
 
-    const pct = (d.status === 'done' || d.status === 'done_nostart') ? 100 : d.progress;
-    const bar = `<div class="prog-wrap"><div class="prog-fill ${fillCls}" style="width:${pct}%"></div></div>`;
-    const pctStr = (d.status === 'done' || d.status === 'done_nostart') ? '100.00%'
-                 : d.status === 'failed' ? '0.00%'
-                 : (d.status === 'lost' || d.status === 'waiting') ? '—'
-                 : `${d.progress.toFixed(2)}%`;
-    const eta = d.status === 'formatting' && d.eta && d.eta !== '--' ? `ETA: ${d.eta}`
-              : d.eta === 'done' ? 'done' : '—';
+  // Backfill serials for legacy SPEEDTEST lines (slot/read only) using nearby
+  // serial-bearing lines from the same slot within the fetched window.
+  const serialBySlot = new Map();
+  rows.forEach(row => {
+    const rowSlot = String(row.slot || '').trim();
+    const rowSerial = String(row.serial || '').trim();
+    if (rowSerial && rowSerial !== '?' && rowSlot) {
+      serialBySlot.set(rowSlot, rowSerial);
+    }
 
-    return `<tr>
-      <td class="cyan">Slot ${d.slot}</td>
-      <td>${d.serial || '<span class="dim">N/A</span>'}</td>
-      <td>${badge}</td>
-      <td>${bar}</td>
-      <td>${pctStr}</td>
-      <td>${fmtDuration(d.elapsed)}</td>
-      <td>${eta}</td>
+    if (row.event !== 'SPEEDTEST') return;
+    if (rowSerial && rowSerial !== '?') return;
+
+    const pref = parseLogPrefix(row.raw || '');
+    const groups = parseSpeedReadGroups(pref.message || '');
+    if (!groups.length) return;
+
+    const patched = groups.map(g => {
+      const slot = String(g.slot || '').trim();
+      const serial = String(g.serial || '').trim() || (slot ? (serialBySlot.get(slot) || '') : '');
+      return { ...g, serial };
+    });
+    const serials = Array.from(new Set(
+      patched.map(g => String(g.serial || '').trim()).filter(v => v && v !== '?')
+    ));
+    if (serials.length) {
+      row.serial = serials.join(', ');
+      row.summary = buildSpeedtestSummary(patched);
+      patched.forEach(g => {
+        const slot = String(g.slot || '').trim();
+        const serial = String(g.serial || '').trim();
+        if (slot && serial && serial !== '?') serialBySlot.set(slot, serial);
+      });
+    }
+  });
+
+  rows.sort((a, b) => {
+    const aHasTs = Number.isFinite(a.timestampMs);
+    const bHasTs = Number.isFinite(b.timestampMs);
+    if (aHasTs && bHasTs) return b.timestampMs - a.timestampMs;
+    if (aHasTs) return -1;
+    if (bHasTs) return 1;
+    return b.sourceIndex - a.sourceIndex;
+  });
+  return rows;
+}
+
+function filterLogsRows(rows) {
+  const eventFilter = logsFilterEvent || 'All';
+  const query = String(logsFilterQuery || '').trim().toLowerCase();
+  return (rows || []).filter(row => {
+    if (eventFilter !== 'All' && row.event !== eventFilter) return false;
+    if (!query) return true;
+    const haystack = [
+      row.summary,
+      row.event,
+      row.slot,
+      row.device,
+      row.raw,
+      row.serial,
+      row.model,
+      row.level,
+    ].join(' ').toLowerCase();
+    return haystack.includes(query);
+  });
+}
+
+function logsEventBadgeClass(event) {
+  if (event === 'FORMAT_COMPLETE' || event === 'HEALTH' || event === 'SPEEDTEST') return 'badge-green';
+  if (event === 'FORMAT_FAILED' || event === 'FORMAT_START_FAILED') return 'badge-red';
+  if (event === 'FORMAT_STARTED' || event === 'FORMAT_ABORTED' || event === 'FORMAT_COMPLETE_FMT_TIMEOUT' || event === 'MISSING_SLOTS') return 'badge-yellow';
+  return 'badge-dim';
+}
+
+function logsLevelBadgeClass(level) {
+  const v = String(level || '').toUpperCase();
+  if (v === 'ERROR' || v === 'CRITICAL') return 'badge-red';
+  if (v === 'WARN' || v === 'WARNING') return 'badge-yellow';
+  if (v === 'INFO') return 'badge-green';
+  return 'badge-dim';
+}
+
+function logsBadgeHtml(text, cls) {
+  return `<span class="badge ${cls}">${escapeHtml(text || '—')}</span>`;
+}
+
+function renderLogsTable(rowsFiltered, totalCount) {
+  const wrap = $('logs-table-wrap');
+  const body = $('logs-table-body');
+  const empty = $('logs-empty');
+  if (!wrap || !body || !empty) return;
+
+  const rows = Array.isArray(rowsFiltered) ? rowsFiltered : [];
+  if (!rows.length) {
+    wrap.classList.add('hidden');
+    body.innerHTML = '';
+    empty.textContent = totalCount > 0 ? 'No log lines match current filters.' : 'No log lines found.';
+    empty.classList.remove('hidden');
+    return;
+  }
+
+  wrap.classList.remove('hidden');
+  empty.classList.add('hidden');
+
+  body.innerHTML = rows.map(row => {
+    const rowId = row.id;
+    const expanded = logsExpandedRaw.has(rowId);
+    const serialText = row.serial ? escapeHtml(row.serial) : '<span class="dim">—</span>';
+    const devText = row.device ? escapeHtml(row.device) : '<span class="dim">—</span>';
+    const rawToggle = expanded ? 'Hide' : 'Show';
+    const main = `<tr>
+      <td>${escapeHtml(row.timeDisplay || '—')}</td>
+      <td>${logsBadgeHtml(row.level || '—', logsLevelBadgeClass(row.level))}</td>
+      <td>${logsBadgeHtml(row.event || 'RAW', logsEventBadgeClass(row.event))}</td>
+      <td>${serialText}</td>
+      <td class="logs-device">${devText}</td>
+      <td><div class="logs-summary">${escapeHtml(row.summary || '')}</div></td>
+      <td><button type="button" class="btn logs-raw-btn" data-row-id="${rowId}">${rawToggle}</button></td>
     </tr>`;
+    if (!expanded) return main;
+    return `${main}<tr><td colspan="7"><div class="logs-raw-line">${escapeHtml(row.raw || '')}</div></td></tr>`;
   }).join('');
 }
 
-$('prog-pause-btn').addEventListener('click', () => {
-  progPaused = !progPaused;
-  $('prog-pause-btn').textContent = progPaused ? 'Resume' : 'Pause';
-  setStatus('prog-status', progPaused
-    ? `⏸ Paused (interval: ${progInterval}s)`
-    : `<span class="spin"></span> Monitoring ${progMonitoredPaths.length} device(s)...`, 'info');
-});
-
-$('prog-refresh-btn').addEventListener('click', () => {
-  if (progMonitoredPaths.length) {
-    postJSON('/api/format/poll', { devices: progMonitoredPaths })
-      .then(data => { if (!data.error) renderProgressRows(data.devices); });
+function rerenderLogsFromState(updateStatus = true) {
+  const filtered = filterLogsRows(logsRows);
+  const total = Number.isFinite(Number(logsTotalCount)) ? Number(logsTotalCount) : logsRows.length;
+  renderLogsTable(filtered, total);
+  if (updateStatus) {
+    setStatus(
+      'logs-status',
+      `Showing ${filtered.length} of ${total} line(s) (last ${LOGS_LINE_LIMIT}).`,
+      filtered.length ? '' : 'info'
+    );
   }
-});
-
-$('prog-int-minus').addEventListener('click', () => {
-  progInterval = Math.max(1, progInterval - 1);
-  $('prog-interval-val').textContent = progInterval;
-  if (progTimerId) { clearInterval(progTimerId); progTimerId = setInterval(() => { if (!progPaused) { postJSON('/api/format/poll', { devices: progMonitoredPaths }).then(data => { if (!data.error) renderProgressRows(data.devices); }); } }, progInterval * 1000); }
-});
-
-$('prog-int-plus').addEventListener('click', () => {
-  progInterval = Math.min(60, progInterval + 1);
-  $('prog-interval-val').textContent = progInterval;
-  if (progTimerId) { clearInterval(progTimerId); progTimerId = setInterval(() => { if (!progPaused) { postJSON('/api/format/poll', { devices: progMonitoredPaths }).then(data => { if (!data.error) renderProgressRows(data.devices); }); } }, progInterval * 1000); }
-});
-
-$('prog-stop-btn').addEventListener('click', () => {
-  if (progTimerId) { clearInterval(progTimerId); progTimerId = null; }
-  progMonitoring = false;
-  $('prog-controls').classList.add('hidden');
-  $('prog-load-btn').classList.remove('hidden');
-  $('prog-monitor-btn').classList.add('hidden');
-  $('prog-table-wrap').classList.add('hidden');
-  setStatus('prog-status', 'Monitoring stopped.', '');
-});
-
-// ---------------------------------------------------------------------------
-// SPEED TAB — blocking POST
-// ---------------------------------------------------------------------------
-let speedDevices = [];
-
-$('speed-load-btn').addEventListener('click', () => {
-  const btn = $('speed-load-btn');
-  btn.disabled = true;
-  $('speed-table-wrap').classList.add('hidden');
-  $('speed-start-btn').classList.add('hidden');
-  setStatus('speed-status', '<span class="spin"></span> Loading...', 'info');
-
-  fetch('/api/discover').then(r => r.json())
-    .then(devs => {
-      speedDevices = devs;
-      renderSpeedTable(devs);
-      setStatus('speed-status', `${devs.length} device(s) found. Select to test.`, 'success');
-      $('speed-table-wrap').classList.remove('hidden');
-      $('speed-start-btn').classList.remove('hidden');
-    })
-    .catch(err => setStatus('speed-status', `✗ ${err.message}`, 'error'))
-    .finally(() => { btn.disabled = false; });
-});
-
-function renderSpeedTable(devices) {
-  $('speed-chk-all').addEventListener('change', e => {
-    document.querySelectorAll('.speed-chk').forEach(c => c.checked = e.target.checked);
-  });
-  $('speed-tbody').innerHTML = devices.map((d, i) => `
-    <tr>
-      <td><input type="checkbox" class="speed-chk" data-idx="${i}" checked></td>
-      <td class="cyan">${d.slot}</td>
-      <td class="dim">${d.path}</td>
-      <td>${d.size || '—'}</td>
-      <td>${d.serial || '<span class="dim">N/A</span>'}</td>
-      <td>${d.model || '<span class="dim">unknown</span>'}</td>
-      <td id="speed-result-${i}"><span class="dim">—</span></td>
-    </tr>`).join('');
 }
 
-$('speed-start-btn').addEventListener('click', () => {
-  const selected = [...document.querySelectorAll('.speed-chk:checked')].map(c => speedDevices[+c.dataset.idx]);
-  if (!selected.length) { setStatus('speed-status', 'No devices selected.', 'error'); return; }
+function refreshLogsFiltersFromInputs() {
+  const eventEl = $('logs-event-filter');
+  const searchEl = $('logs-search');
+  logsFilterEvent = eventEl ? (eventEl.value || 'All') : 'All';
+  logsFilterQuery = searchEl ? (searchEl.value || '') : '';
+}
 
-  const btn = $('speed-start-btn');
-  btn.disabled = true;
-  setStatus('speed-status', `<span class="spin"></span> Testing ${selected.length} device(s) — this may take several minutes...`, 'info');
+function applyLogsFiltersFromInputs(updateStatus = true) {
+  refreshLogsFiltersFromInputs();
+  if (!logsLoadedOnce && !logsRows.length) return;
+  rerenderLogsFromState(updateStatus);
+}
 
-  // Show spinners on selected rows
-  selected.forEach(d => {
-    const idx = speedDevices.findIndex(x => x.path === d.path);
-    const cell = $(`speed-result-${idx}`);
-    if (cell) cell.innerHTML = '<span class="spin"></span>';
+function getSlotObj(slotNumber) {
+  return slotsData.find(s => s.slot === slotNumber) || null;
+}
+
+function getSlotByPath(path) {
+  const found = slotsData.find(s => s.device && s.device.path === path);
+  return found ? found.slot : null;
+}
+
+function getSelectedSlotsSorted() {
+  return Array.from(selectedSlots).sort((a, b) => a - b);
+}
+
+function ensurePrimarySlot() {
+  const selected = getSelectedSlotsSorted();
+  if (!selected.length) {
+    primarySlot = null;
+    return;
+  }
+  if (primarySlot === null || !selectedSlots.has(primarySlot)) {
+    primarySlot = selected[selected.length - 1];
+  }
+}
+
+function getPrimarySlotObj() {
+  ensurePrimarySlot();
+  return primarySlot === null ? null : getSlotObj(primarySlot);
+}
+
+function getSelectedPresentSlots(showError = false) {
+  const selected = getSelectedSlotsSorted()
+    .map(getSlotObj)
+    .filter(s => s && s.status === 'PRESENT' && s.device && s.device.path);
+  if (showError && !selected.length) {
+    setSlotActionStatus('Select at least one PRESENT bay first.', 'error');
+  }
+  return selected;
+}
+
+function getSelectedPaths(showError = false) {
+  return getSelectedPresentSlots(showError).map(s => s.device.path);
+}
+
+function selectionSummary() {
+  return {
+    total: selectedSlots.size,
+    actionable: getSelectedPresentSlots(false).length,
+  };
+}
+
+function slotsSummary() {
+  const total = slotsData.length;
+  const missing = slotsData.filter(s => s.status === 'MISSING').length;
+  const present = Math.max(0, total - missing);
+  const empty = present === 0;
+  return {
+    text: missing
+      ? `⚠ ${missing} slot(s) MISSING out of ${total}.`
+      : `✓ All ${total} slots present.`,
+    cls: missing ? 'error' : 'success',
+    total,
+    missing,
+    present,
+    empty,
+  };
+}
+
+function renderSlotsSummary(extraMsg) {
+  const summary = slotsSummary();
+  const msg = extraMsg ? `${summary.text} ${extraMsg}` : summary.text;
+  setStatus('slots-status', msg, summary.cls);
+}
+
+function setGlobalSlotButtonsDisabled(disabled) {
+  $('slots-refresh-btn').disabled = disabled;
+  $('slots-health-btn').disabled = disabled;
+  $('slot-select-present-btn').disabled = disabled;
+  $('slot-select-invert-btn').disabled = disabled;
+}
+
+function setSlotActionStatus(msg, cls) {
+  setStatus('slot-action-status', msg, cls);
+}
+
+function isBlockingActionRunning() {
+  return globalActionBusy || (!!slotActionState.runningAction && slotActionState.runningAction !== 'monitor');
+}
+
+function isTypingContext(event) {
+  const t = event && event.target ? event.target : document.activeElement;
+  if (!t) return false;
+  const tag = String(t.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
+  if (t.isContentEditable) return true;
+  return false;
+}
+
+function clickIfEnabled(id) {
+  const el = $(id);
+  if (!el || el.disabled) return false;
+  el.click();
+  return true;
+}
+
+function toggleSelectAllViaHotkey() {
+  const selectAll = $('slots-select-all');
+  if (!selectAll || selectAll.disabled) return false;
+  const shouldSelectAll = selectAll.indeterminate || !selectAll.checked;
+  selectAll.checked = shouldSelectAll;
+  selectAll.indeterminate = false;
+  selectAll.dispatchEvent(new Event('change', { bubbles: true }));
+  return true;
+}
+
+function handleGlobalHotkeys(event) {
+  if (!event || event.defaultPrevented) return;
+  if (activeMainTab !== TAB_SLOTS) return;
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  if (isTypingContext(event)) return;
+  if (confirmDialogOpen) return;
+
+  const k = String(event.key || '').toLowerCase();
+  let consumed = false;
+
+  if (k === 'r') consumed = clickIfEnabled('slots-refresh-btn');
+  else if (k === 'h') consumed = clickIfEnabled('slots-health-btn');
+  else if (k === 'p') consumed = clickIfEnabled('slot-select-present-btn');
+  else if (k === 'i') consumed = clickIfEnabled('slot-select-invert-btn');
+  else if (k === 'c') consumed = clickIfEnabled('slot-clear-selection-btn');
+  else if (k === 'a') consumed = toggleSelectAllViaHotkey();
+
+  if (consumed) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+}
+
+function loadLogs(force) {
+  const shouldForce = !!force;
+  if (logsLoading) return;
+  if (!shouldForce && logsLoadedOnce) return;
+
+  logsLoading = true;
+  $('logs-refresh-btn').disabled = true;
+  setStatus('logs-status', '<span class="spin"></span> Loading logs...', 'info');
+
+  getJSON('/api/logs')
+    .then(data => {
+      const source = data.source || '—';
+      const lines = Array.isArray(data.lines) ? data.lines : [];
+      const lineCount = Number.isFinite(Number(data.line_count)) ? Number(data.line_count) : lines.length;
+      rebuildFormatHistoryFromLogLines(lines);
+      renderSlotActionPanel();
+
+      $('logs-source').textContent = `Source: ${source}`;
+      $('logs-fetched-at').textContent = fmtTimestamp(data.fetched_at);
+      logsTotalCount = lineCount;
+      logsRows = buildLogsRows(lines);
+      logsExpandedRaw = new Set();
+      refreshLogsFiltersFromInputs();
+      rerenderLogsFromState(true);
+      logsLoadedOnce = true;
+    })
+    .catch(err => {
+      const data = err && err.data ? err.data : {};
+      if (data.source) $('logs-source').textContent = `Source: ${data.source}`;
+      $('logs-fetched-at').textContent = '—';
+      logsTotalCount = 0;
+      logsRows = [];
+      logsExpandedRaw = new Set();
+      renderLogsTable([], 0);
+      setStatus('logs-status', `✗ ${err.message}`, 'error');
+    })
+    .finally(() => {
+      logsLoading = false;
+      $('logs-refresh-btn').disabled = false;
+    });
+}
+
+function setMainTab(tabName) {
+  const showSlots = tabName === TAB_SLOTS;
+  activeMainTab = showSlots ? TAB_SLOTS : TAB_LOGS;
+
+  $('section-slots').classList.toggle('hidden', !showSlots);
+  $('section-logs').classList.toggle('hidden', showSlots);
+  $('tab-slots').classList.toggle('active', showSlots);
+  $('tab-logs').classList.toggle('active', !showSlots);
+  $('nav-tab-slots').classList.toggle('active', showSlots);
+  $('nav-tab-logs').classList.toggle('active', !showSlots);
+
+  if (!showSlots && !logsLoadedOnce) loadLogs(false);
+}
+
+function recordAction(action, kind, count, detail) {
+  // Action history was removed from the UI.
+}
+
+function setSelection(slotNumbers) {
+  const list = Array.from(new Set((slotNumbers || []).filter(Number.isInteger))).sort((a, b) => a - b);
+  selectedSlots = new Set(list);
+  primarySlot = list.length ? list[list.length - 1] : null;
+  ensurePrimarySlot();
+  renderR510Panel();
+  renderSlotActionPanel();
+}
+
+function applySlotsChecked(slotNumbers, checked) {
+  const next = new Set(selectedSlots);
+  (slotNumbers || []).forEach(slot => {
+    if (!Number.isInteger(slot)) return;
+    if (checked) next.add(slot);
+    else next.delete(slot);
+  });
+  setSelection(Array.from(next));
+}
+
+function selectPresent() {
+  const presentSlots = slotsData.filter(s => s.status === 'PRESENT');
+  const allPresentSelected = presentSlots.length > 0 && presentSlots.every(s => selectedSlots.has(s.slot));
+  if (allPresentSelected) {
+    setSelection([]);
+    setSlotActionStatus('Selection cleared.', '');
+    return;
+  }
+  const picked = presentSlots.map(s => Number(s.slot)).filter(Number.isInteger);
+  setSelection(picked);
+  const summary = selectionSummary();
+  if (summary.total) {
+    setSlotActionStatus(`Selected PRESENT bays. ${summary.total} selected, ${summary.actionable} actionable.`, '');
+  } else {
+    setSlotActionStatus('Selection cleared.', '');
+  }
+}
+
+function invertSelection() {
+  const next = slotsData
+    .map(s => Number(s.slot))
+    .filter(Number.isInteger)
+    .filter(slot => !selectedSlots.has(slot));
+  setSelection(next);
+  const summary = selectionSummary();
+  if (summary.total) {
+    setSlotActionStatus(`Selection inverted. ${summary.total} selected, ${summary.actionable} actionable.`, '');
+  } else {
+    setSlotActionStatus('Selection cleared.', '');
+  }
+}
+
+function selectSingleSlot(slot) {
+  if (!Number.isInteger(slot)) return;
+  setSelection([slot]);
+}
+
+function runTableActionForSlot(slot, action) {
+  const slotObj = getSlotObj(slot);
+  if (!slotObj) return;
+  if (slotObj.status !== 'PRESENT' || !slotObj.device || !slotObj.device.path) {
+    setSlotActionStatus(`Slot ${slot} is not PRESENT.`, 'error');
+    return;
+  }
+
+  selectSingleSlot(slot);
+
+  if (action === 'health') runHealthEnrichment(true);
+  else if (action === 'speed') runSpeedForSelection();
+  else if (action === 'format') runFormatForSelection();
+  else if (action === 'monitor') startMonitorForSelection();
+}
+
+function renderSlotsTable() {
+  const busy = !!slotActionState.runningAction && slotActionState.runningAction !== 'monitor';
+  const monitorActive = monitorState.active;
+  $('slots-tbody').innerHTML = slotsData.map(s => {
+    const d = s.device;
+    const slot = Number(s.slot);
+    const isSelected = selectedSlots.has(slot);
+    const actionable = s.status === 'PRESENT' && !!(d && d.path);
+    const disableHealth = !actionable || busy || monitorActive;
+    const disableSpeed = !actionable || busy || monitorActive;
+    const disableFormat = !actionable || busy || monitorActive;
+    const disableMonitor = !actionable || busy;
+    const actionsHtml = actionable
+      ? `<div class="slots-row-actions">
+          <button type="button" class="btn slots-row-action-btn" data-slot="${slot}" data-action="health"${disableHealth ? ' disabled' : ''}>Health</button>
+          <button type="button" class="btn slots-row-action-btn" data-slot="${slot}" data-action="speed"${disableSpeed ? ' disabled' : ''}>Speed</button>
+          <button type="button" class="btn danger slots-row-action-btn" data-slot="${slot}" data-action="format"${disableFormat ? ' disabled' : ''}>Format</button>
+          <button type="button" class="btn primary slots-row-action-btn" data-slot="${slot}" data-action="monitor"${disableMonitor ? ' disabled' : ''}>Monitor</button>
+        </div>`
+      : '<span class="dim">—</span>';
+    return `<tr data-slot="${slot}" class="${isSelected ? 'slots-row-selected' : ''}">
+      <td class="slots-table-select-col">
+        <input type="checkbox" class="slots-row-select" data-slot="${slot}" ${isSelected ? 'checked' : ''} aria-label="Select slot ${slot}">
+      </td>
+      <td class="cyan">${s.slot}</td>
+      <td>${slotPresenceBadge(s)}</td>
+      <td>${d ? healthBadge(d.health) : '<span class="dim">—</span>'}</td>
+      <td>${d ? fmtBadge(d.fmt_status, d.zeroed) : '<span class="dim">—</span>'}</td>
+      <td>${d ? zeroedBadge(d.zeroed) : '<span class="dim">—</span>'}</td>
+      <td>${d ? `<span class="dim">${escapeHtml(d.path)}</span>` : '<span class="dim">—</span>'}</td>
+      <td>${d ? (escapeHtml(d.serial) || '<span class="dim">N/A</span>') : '<span class="dim">—</span>'}</td>
+      <td>${d ? (escapeHtml(d.model) || '<span class="dim">unknown</span>') : '<span class="dim">—</span>'}</td>
+      <td>${actionsHtml}</td>
+    </tr>`;
+  }).join('');
+
+  const selectAll = $('slots-select-all');
+  if (selectAll) {
+    const total = slotsData.length;
+    const selectedCount = selectedSlots.size;
+    selectAll.disabled = total === 0;
+    selectAll.checked = total > 0 && selectedCount === total;
+    selectAll.indeterminate = selectedCount > 0 && selectedCount < total;
+  }
+}
+
+function renderR510Panel() {
+  const bySlot = new Map(slotsData.map(s => [s.slot, s]));
+  const panelOrder = [0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11];
+  $('slots-grid').innerHTML = panelOrder.map(slot => {
+    const s = bySlot.get(slot) || { slot, status: 'MISSING', device: null };
+    const visual = slotVisualState(s);
+    const isSelected = selectedSlots.has(s.slot);
+    const isMonitoring = !!(s.device && s.device.path && monitorState.activePaths.has(s.device.path));
+    const statusText = s.status === 'PRESENT' ? (visual === 'green' ? 'PRESENT' : 'WARNING') : 'MISSING';
+    const healthText = s.status === 'PRESENT' ? slotHealthText(s) : '';
+    const sizeText = s.status === 'PRESENT' && s.device && s.device.size ? s.device.size : '';
+    const hv = slotHealthNumber(s);
+    const hColor = hv !== null
+      ? (hv >= 90 ? 'var(--green-bright)' : hv >= 50 ? 'var(--yellow-bright)' : 'var(--red-bright)')
+      : 'var(--dim)';
+    return `<button type="button" class="r510-bay bay--${visual}${isSelected ? ' bay--selected' : ''}${isMonitoring ? ' bay--monitoring' : ''}" data-slot="${s.slot}" title="Slot ${s.slot}${isSelected ? ' selected' : ''} (click toggles selection)" aria-pressed="${isSelected ? 'true' : 'false'}">
+      <span class="bay-handle" aria-hidden="true"></span>
+      <span class="bay-led" aria-hidden="true"></span>
+      <span class="bay-slot-label">Slot ${s.slot}</span>
+      ${isSelected ? '<span class="bay-selected-pill">Selected</span>' : ''}
+      <span class="bay-state">${statusText}</span>
+      ${healthText ? `<span class="bay-health" style="color:${hColor}">${escapeHtml(healthText)}</span>` : ''}
+      ${sizeText ? `<span class="bay-size">${escapeHtml(sizeText)}</span>` : ''}
+    </button>`;
+  }).join('');
+}
+
+function renderSlotActionResults(slotObj) {
+  const d = slotObj && slotObj.device;
+  $('slot-health-result').innerHTML = d ? healthBadge(d.health) : '<span class="dim">—</span>';
+
+  const hRes = slotObj ? slotActionState.healthResults[slotObj.slot] : null;
+  if (hRes) {
+    const warn = typeof hRes.rc === 'number' && hRes.rc !== 0 ? ` (exit ${hRes.rc})` : '';
+    $('slot-health-meta').textContent = `Scanned ${hRes.at.toLocaleTimeString()} in ${fmtDuration(hRes.elapsed)}${warn}`;
+  } else if (d && d.path && healthLoadedAt && healthByPath[d.path] !== undefined) {
+    $('slot-health-meta').textContent = `Shown at ${healthLoadedAt.toLocaleTimeString()}`;
+  } else {
+    $('slot-health-meta').textContent = '';
+  }
+
+  const sRes = slotObj ? slotActionState.speedResultsBySlot[slotObj.slot] : null;
+  $('slot-speed-result').innerHTML = sRes ? speedBadge(sRes.speed) : '<span class="dim">Not tested</span>';
+  $('slot-speed-meta').textContent = sRes ? `Tested ${sRes.at.toLocaleTimeString()}` : '';
+
+  const fRes = slotObj ? slotActionState.formatResults[slotObj.slot] : null;
+  const logFmt = d ? getFormatHistoryForSerial(d.serial) : null;
+  if (fRes) {
+    $('slot-format-result').innerHTML = formatStateBadge(fRes.state);
+    $('slot-format-meta').textContent = `${fRes.detail || fRes.state} · ${fRes.at.toLocaleTimeString()}`;
+  } else if (logFmt) {
+    $('slot-format-result').innerHTML = formatStateBadge(logFmt.state);
+    $('slot-format-meta').textContent = logFmt.at
+      ? `From logs: ${logFmt.detail} · ${fmtTimestamp(logFmt.at)}`
+      : `From logs: ${logFmt.detail}`;
+  } else {
+    $('slot-format-result').innerHTML = '<span class="dim">Not started</span>';
+    $('slot-format-meta').textContent = '';
+  }
+}
+
+function getMonitorEntries() {
+  const entries = monitorState.paths.map(path => {
+    const known = monitorState.latestByPath[path];
+    if (known) return { ...known, path: known.path || path };
+    const slot = getSlotByPath(path);
+    return {
+      path,
+      slot: slot === null ? '?' : slot,
+      status: monitorState.activePaths.has(path) ? 'waiting' : 'idle',
+      progress: 0,
+      elapsed: 0,
+      eta: '--',
+    };
   });
 
-  postJSON('/api/speedtest', { devices: selected.map(d => d.path) })
-    .then(data => {
-      if (data.error) { setStatus('speed-status', `✗ ${data.error}`, 'error'); return; }
-      data.results.forEach(r => {
-        const idx = speedDevices.findIndex(d => d.path === r.device);
-        const cell = $(`speed-result-${idx}`);
-        if (cell) cell.innerHTML = speedBadge(r.speed);
-      });
-      const nOk = data.results.filter(r => !['?','timeout','no data','error'].includes(r.speed)).length;
-      setStatus('speed-status', `✓ Done — ${nOk}/${data.results.length} device(s) returned speeds.`, 'success');
-    })
-    .catch(err => setStatus('speed-status', `✗ ${err.message}`, 'error'))
-    .finally(() => { btn.disabled = false; });
-});
+  return entries.sort((a, b) => {
+    const sa = Number.isInteger(Number(a.slot)) ? Number(a.slot) : 999;
+    const sb = Number.isInteger(Number(b.slot)) ? Number(b.slot) : 999;
+    if (sa !== sb) return sa - sb;
+    return String(a.path || '').localeCompare(String(b.path || ''));
+  });
+}
 
-// ---------------------------------------------------------------------------
-// SLOTS TAB
-// ---------------------------------------------------------------------------
-$('slots-refresh-btn').addEventListener('click', () => {
-  const btn = $('slots-refresh-btn');
-  btn.disabled = true;
+function renderMonitorState() {
+  const wrap = $('slot-monitor-wrap');
+  const pollingState = $('slot-monitor-polling-state');
+  const show = monitorState.active || monitorState.paths.length > 0;
+  if (!show) {
+    wrap.classList.add('hidden');
+    if (pollingState) pollingState.textContent = 'Polling: stopped';
+    return;
+  }
+
+  wrap.classList.remove('hidden');
+  applySectionCollapse('monitor');
+  $('slot-monitor-interval-val').textContent = monitorState.interval;
+  $('slot-monitor-pause-btn').textContent = monitorState.paused ? 'Resume' : 'Pause';
+  $('slot-monitor-pause-btn').disabled = !monitorState.active;
+  $('slot-monitor-poll-btn').disabled = !monitorState.active;
+  $('slot-monitor-stop-btn').disabled = false;
+  if (pollingState) {
+    if (monitorState.active && !monitorState.paused) {
+      pollingState.textContent = `Polling: running every ${monitorState.interval}s`;
+    } else if (monitorState.active && monitorState.paused) {
+      pollingState.textContent = 'Polling: paused (manual poll only)';
+    } else {
+      pollingState.textContent = 'Polling: stopped';
+    }
+  }
+
+  const entries = getMonitorEntries();
+  const nTotal = entries.length;
+  const nFmt = entries.filter(e => e.status === 'formatting' || e.status === 'started').length;
+  const nWait = entries.filter(e => e.status === 'waiting').length;
+  const nDone = entries.filter(e => e.status === 'done').length;
+  const nDoneNoStart = entries.filter(e => e.status === 'done_nostart').length;
+  const nFail = entries.filter(e => e.status === 'failed' || e.status === 'lost').length;
+  const nActive = monitorState.activePaths.size;
+  const pctValues = entries.map(e => {
+    if (e.status === 'done' || e.status === 'done_nostart') return 100;
+    const v = Number(e.progress);
+    return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : null;
+  }).filter(v => v !== null);
+  const avgPct = pctValues.length
+    ? pctValues.reduce((a, b) => a + b, 0) / pctValues.length
+    : null;
+  const maxElapsed = entries.reduce((acc, e) => Math.max(acc, Number(e.elapsed) || 0), 0);
+  const firstFmt = entries.find(e => e.status === 'formatting' && e.eta && e.eta !== '--');
+
+  if (monitorState.active) {
+    $('slot-monitor-state').innerHTML = '<span class="badge badge-yellow">running</span>';
+  } else if (nTotal) {
+    $('slot-monitor-state').innerHTML = nFail
+      ? '<span class="badge badge-red">stopped (failed)</span>'
+      : '<span class="badge badge-green">complete</span>';
+  } else {
+    $('slot-monitor-state').innerHTML = '<span class="badge badge-dim">idle</span>';
+  }
+
+  let fillCls = '';
+  if (nFail && !monitorState.active) fillCls = 'red';
+  else if (avgPct !== null && avgPct < 50) fillCls = 'yellow';
+  $('slot-monitor-bar-fill').className = `prog-fill${fillCls ? ' ' + fillCls : ''}`;
+  $('slot-monitor-bar-fill').style.width = `${avgPct === null ? 0 : avgPct}%`;
+  $('slot-monitor-pct').textContent = avgPct === null ? '—' : `${avgPct.toFixed(2)}%`;
+  $('slot-monitor-elapsed').textContent = maxElapsed ? fmtDuration(maxElapsed) : '—';
+  $('slot-monitor-eta').textContent = firstFmt ? firstFmt.eta : '—';
+
+  $('slot-monitor-summary').innerHTML = `
+    <div class="slot-monitor-chip"><span class="k">Total</span>${nTotal}</div>
+    <div class="slot-monitor-chip"><span class="k">Active</span>${nActive}</div>
+    <div class="slot-monitor-chip"><span class="k">Formatting</span>${nFmt}</div>
+    <div class="slot-monitor-chip"><span class="k">Waiting</span>${nWait}</div>
+    <div class="slot-monitor-chip"><span class="k">Done</span>${nDone}</div>
+    <div class="slot-monitor-chip"><span class="k">Done/Not Started</span>${nDoneNoStart}</div>
+    <div class="slot-monitor-chip"><span class="k">Failed/Lost</span>${nFail}</div>
+  `;
+
+  if (!entries.length) {
+    $('slot-monitor-rows').innerHTML = '<div class="slot-monitor-empty">No monitor session data yet.</div>';
+    return;
+  }
+
+  const rows = entries.map(e => {
+    const status = e.status || 'unknown';
+    const pct = (status === 'done' || status === 'done_nostart')
+      ? 100
+      : (Number.isFinite(Number(e.progress)) ? Math.max(0, Math.min(100, Number(e.progress))) : 0);
+    const pctText = (status === 'lost' || status === 'waiting') ? '—' : `${pct.toFixed(2)}%`;
+    const eta = status === 'formatting' && e.eta && e.eta !== '--'
+      ? escapeHtml(e.eta)
+      : (status === 'done' || status === 'done_nostart' ? 'done' : '—');
+    const fillCls = (status === 'failed' || status === 'lost') ? 'red'
+      : (status === 'waiting' || pct < 50 ? 'yellow' : '');
+    const slotLabel = Number.isInteger(Number(e.slot)) ? `Slot ${e.slot}` : 'Slot ?';
+    const elapsed = Number(e.elapsed) > 0 ? fmtDuration(e.elapsed) : '—';
+
+    return `<div class="slot-monitor-row">
+      <div>${slotLabel}</div>
+      <div class="path" title="${escapeHtml(e.path)}">${escapeHtml(e.path)}</div>
+      <div class="nowrap">${monitorStatusBadge(status)}</div>
+      <div><div class="prog-wrap"><div class="prog-fill${fillCls ? ' ' + fillCls : ''}${(status === 'formatting' || status === 'started') ? ' active' : ''}" style="width:${pct}%"></div></div></div>
+      <div>${pctText}</div>
+      <div>${elapsed}</div>
+      <div class="nowrap">${eta}</div>
+    </div>`;
+  }).join('');
+
+  $('slot-monitor-rows').innerHTML = `
+    <div class="slot-monitor-row head">
+      <div>Slot</div>
+      <div>Device</div>
+      <div>Status</div>
+      <div>Progress</div>
+      <div>%</div>
+      <div>Elapsed</div>
+      <div>ETA</div>
+    </div>
+    ${rows}
+  `;
+}
+
+function updateActionButtons() {
+  const summary = selectionSummary();
+  const busy = !!slotActionState.runningAction && slotActionState.runningAction !== 'monitor';
+  const monitorActive = monitorState.active;
+  const hasSlots = slotsData.length > 0;
+
+  $('slot-run-health-btn').disabled = summary.actionable === 0 || busy || monitorActive;
+  $('slot-run-speed-btn').disabled = summary.actionable === 0 || busy || monitorActive;
+  $('slot-run-format-btn').disabled = summary.actionable === 0 || busy || monitorActive;
+  $('slot-run-monitor-btn').disabled = summary.actionable === 0 || busy;
+  $('slot-clear-selection-btn').disabled = summary.total === 0;
+  $('slot-select-present-btn').disabled = !hasSlots;
+  $('slot-select-invert-btn').disabled = !hasSlots;
+
+  const presentSlots = slotsData.filter(s => s.status === 'PRESENT');
+  const nPresent = presentSlots.length;
+  const allPresentSelected = nPresent > 0 && presentSlots.every(s => selectedSlots.has(s.slot));
+  $('slot-select-present-btn').textContent = allPresentSelected
+    ? 'Deselect All'
+    : (nPresent > 0 ? `Select Present (${nPresent})` : 'Select Present');
+
+  $('slot-run-health-btn').textContent = summary.actionable > 1 ? `Health All (${summary.actionable})` : 'Health';
+  $('slot-run-speed-btn').textContent = summary.actionable > 1 ? `Speed Test All (${summary.actionable})` : 'Speed Test';
+  $('slot-run-format-btn').textContent = summary.actionable > 1 ? `Format All (${summary.actionable})` : 'Format';
+  if (monitorActive) {
+    $('slot-run-monitor-btn').textContent = summary.actionable > 1
+      ? `Monitor Add (${summary.actionable})`
+      : 'Monitor Add';
+  } else {
+    $('slot-run-monitor-btn').textContent = summary.actionable > 1 ? `Monitor All (${summary.actionable})` : 'Monitor';
+  }
+
+  const hint = $('slot-action-disabled-reason');
+  let reason = '';
+  let reasonCls = '';
+  if (busy) {
+    reason = 'Disabled: action in progress.';
+    reasonCls = 'info';
+  } else if (summary.actionable === 0) {
+    reason = 'Disabled: 0 actionable.';
+    reasonCls = 'error';
+  } else if (monitorActive) {
+    reason = 'Monitoring active. Monitor adds selected disk(s).';
+    reasonCls = 'info';
+  }
+  hint.textContent = reason;
+  hint.className = `slot-action-hint${reasonCls ? ' ' + reasonCls : ''}`;
+
+  renderSlotsTable();
+}
+
+function renderSlotActionPanel() {
+  const summary = selectionSummary();
+  const slotObj = getPrimarySlotObj();
+
+  if (!summary.total || !slotObj) {
+    $('slot-action-title').textContent = summary.total ? 'Selected Bays' : 'Select bay(s)';
+    $('slot-action-presence').innerHTML = `<span class="badge badge-dim">${summary.total} selected · ${summary.actionable} actionable</span>`;
+    $('slot-action-device').innerHTML = '<span class="dim">—</span>';
+    $('slot-action-health').innerHTML = '<span class="dim">—</span>';
+    $('slot-action-fmt').innerHTML = '<span class="dim">—</span>';
+    $('slot-action-zeroed').innerHTML = '<span class="dim">—</span>';
+    $('slot-action-size').innerHTML = '<span class="dim">—</span>';
+    $('slot-action-serial').innerHTML = '<span class="dim">—</span>';
+    $('slot-action-model').innerHTML = '<span class="dim">—</span>';
+    $('slot-action-meta').textContent = 'Click bays or table rows to toggle selection and run operations.';
+    $('slot-health-result').innerHTML = '<span class="dim">—</span>';
+    $('slot-health-meta').textContent = '';
+    $('slot-speed-result').innerHTML = '<span class="dim">Not tested</span>';
+    $('slot-speed-meta').textContent = '';
+    $('slot-format-result').innerHTML = '<span class="dim">Not started</span>';
+    $('slot-format-meta').textContent = '';
+    renderSpeedLastRunPanel();
+    renderMonitorState();
+    if (!slotActionState.runningAction && !monitorState.active) {
+      setSlotActionStatus('Click a bay or table row to select or unselect it.', '');
+    }
+    updateActionButtons();
+    return;
+  }
+
+  const d = slotObj.device;
+  const selectedPresent = getSelectedPresentSlots(false);
+  const knownHealth = selectedPresent.filter(s => slotHealthNumber(s) !== null).length;
+
+  $('slot-action-title').textContent = summary.total > 1 ? `Primary Slot ${slotObj.slot}` : `Slot ${slotObj.slot}`;
+  $('slot-action-presence').innerHTML = `<span class="badge badge-dim">${summary.total} selected · ${summary.actionable} actionable</span>`;
+  $('slot-action-device').innerHTML = d ? `<span class="dim">${escapeHtml(d.path)}</span>` : '<span class="dim">—</span>';
+  $('slot-action-health').innerHTML = d ? healthBadge(d.health) : '<span class="dim">—</span>';
+  $('slot-action-fmt').innerHTML = d ? fmtBadge(d.fmt_status, d.zeroed) : '<span class="dim">—</span>';
+  $('slot-action-zeroed').innerHTML = d ? zeroedBadge(d.zeroed) : '<span class="dim">—</span>';
+  $('slot-action-size').innerHTML = d && d.size ? escapeHtml(d.size) : '<span class="dim">—</span>';
+  $('slot-action-serial').innerHTML = d ? (escapeHtml(d.serial) || '<span class="dim">N/A</span>') : '<span class="dim">—</span>';
+  $('slot-action-model').innerHTML = d ? (escapeHtml(d.model) || '<span class="dim">unknown</span>') : '<span class="dim">—</span>';
+
+  if (summary.total > 1) {
+    $('slot-action-meta').textContent = `Primary detail is Slot ${slotObj.slot}. ${summary.actionable} selected disk(s) can run actions. Health known for ${knownHealth}/${summary.actionable}.`;
+  } else {
+    $('slot-action-meta').textContent = d ? 'Choose an operation for this device.' : 'No device present in this slot.';
+  }
+
+  renderSlotActionResults(slotObj);
+  renderSpeedLastRunPanel();
+  renderMonitorState();
+  updateActionButtons();
+}
+
+function renderAll() {
+  renderR510Panel();
+  renderSlotsTable();
+  renderSlotActionPanel();
+  $('slots-panel-wrap').classList.remove('hidden');
+  $('slots-table-wrap').classList.remove('hidden');
+}
+
+function stopMonitor(opts) {
+  const options = opts || {};
+  const monitoredCount = monitorState.paths.length;
+  if (monitorState.timerId) clearInterval(monitorState.timerId);
+  monitorState.timerId = null;
+  monitorState.active = false;
+  monitorState.paused = false;
+  monitorState.polling = false;
+  monitorState.activePaths = new Set();
+  if (!options.keepLatest) {
+    monitorState.latestByPath = {};
+    monitorState.paths = [];
+  }
+  if (slotActionState.runningAction === 'monitor') {
+    slotActionState.runningAction = null;
+  }
+  renderR510Panel();
+  renderMonitorState();
+  updateActionButtons();
+  if (!options.silent) {
+    setSlotActionStatus('Monitoring stopped. Formatting continues on the disks.', '');
+    recordAction('Monitor', 'info', monitoredCount, 'stopped');
+  }
+}
+
+function restartMonitorTimer() {
+  if (monitorState.timerId) clearInterval(monitorState.timerId);
+  if (!monitorState.active) return;
+  monitorState.timerId = setInterval(() => {
+    if (!monitorState.paused) pollMonitor(false);
+  }, monitorState.interval * 1000);
+}
+
+function startMonitorForPaths(paths) {
+  const uniquePaths = Array.from(new Set((paths || []).filter(Boolean)));
+  if (!uniquePaths.length) {
+    setSlotActionStatus('Select at least one PRESENT bay first.', 'error');
+    return;
+  }
+
+  monitorPollControl('resume')
+    .catch(() => {
+      // Best effort; continue with local monitor session even if resume call fails.
+    })
+    .finally(() => {
+      const wasActive = monitorState.active;
+      const basePaths = wasActive ? monitorState.paths : [];
+      const mergedPaths = Array.from(new Set([...basePaths, ...uniquePaths]));
+      const addedPaths = mergedPaths.filter(path => !basePaths.includes(path));
+
+      if (!wasActive) {
+        monitorState.active = true;
+        monitorState.paused = false;
+        monitorState.polling = false;
+        monitorState.paths = mergedPaths;
+        monitorState.activePaths = new Set(mergedPaths);
+        monitorState.latestByPath = {};
+      } else {
+        monitorState.paths = mergedPaths;
+        addedPaths.forEach(path => {
+          monitorState.activePaths.add(path);
+          delete monitorState.latestByPath[path];
+        });
+      }
+      slotActionState.runningAction = 'monitor';
+      if (wasActive) {
+        if (addedPaths.length) {
+          setSlotActionStatus(`<span class="spin"></span> Added ${addedPaths.length} disk(s) to monitor (${monitorState.activePaths.size}/${monitorState.paths.length} active).`, 'info');
+          recordAction('Monitor', 'info', addedPaths.length, 'added to active monitor');
+        } else {
+          setSlotActionStatus(`<span class="spin"></span> Monitoring ${monitorState.activePaths.size}/${monitorState.paths.length} disk(s)...`, 'info');
+        }
+      } else {
+        setSlotActionStatus(`<span class="spin"></span> Monitoring ${monitorState.paths.length} disk(s)...`, 'info');
+        recordAction('Monitor', 'info', monitorState.paths.length, 'started');
+      }
+      renderR510Panel();
+      renderSlotActionPanel();
+      pollMonitor(true);
+      restartMonitorTimer();
+    });
+}
+
+function pollMonitor(manual) {
+  if (!monitorState.active || monitorState.polling) return;
+  const batch = Array.from(monitorState.activePaths);
+  if (!batch.length) return;
+  monitorState.polling = true;
+
+  postJSON('/api/format/poll', { devices: batch })
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      const devices = Array.isArray(data.devices) ? data.devices : [];
+      const errors = Array.isArray(data.errors) ? data.errors : [];
+      const now = new Date();
+
+      devices.forEach(d => {
+        const path = d && d.path ? d.path : null;
+        if (!path) return;
+        monitorState.latestByPath[path] = d;
+
+        const slotNum = Number.isInteger(Number(d.slot)) ? Number(d.slot) : getSlotByPath(path);
+        if (Number.isInteger(slotNum)) {
+          slotActionState.formatResults[slotNum] = {
+            state: d.status,
+            detail: d.status === 'formatting'
+              ? `${(Number(d.progress) || 0).toFixed(2)}%`
+              : formatStateText(d.status),
+            at: now,
+          };
+        }
+        if (TERMINAL_STATUSES.has(d.status)) {
+          monitorState.activePaths.delete(path);
+        }
+      });
+
+      errors.forEach(e => {
+        const path = e && e.path ? String(e.path) : '';
+        if (!path) return;
+        const reason = e && e.error ? String(e.error) : 'poll error';
+        const slotNum = getSlotByPath(path);
+        monitorState.latestByPath[path] = {
+          path,
+          slot: Number.isInteger(Number(slotNum)) ? Number(slotNum) : '?',
+          status: 'failed',
+          progress: 0,
+          eta: '--',
+          elapsed: 0,
+        };
+        if (Number.isInteger(Number(slotNum))) {
+          slotActionState.formatResults[Number(slotNum)] = {
+            state: 'failed',
+            detail: reason,
+            at: now,
+          };
+        }
+        monitorState.activePaths.delete(path);
+      });
+
+      renderR510Panel();
+      renderSlotActionPanel();
+
+      if (!monitorState.activePaths.size) {
+        stopMonitor({ silent: true, keepLatest: true });
+        const entries = getMonitorEntries();
+        const failed = entries.filter(e => e.status === 'failed' || e.status === 'lost').length;
+        if (failed) {
+          setSlotActionStatus(`✗ Monitor finished with ${failed} failed/lost disk(s).`, 'error');
+          showToast(`✗ Format finished with ${failed} failed/lost disk(s).`, 'error');
+          recordAction('Monitor', 'error', entries.length, `${failed} failed/lost`);
+        } else {
+          setSlotActionStatus(`✓ Monitor finished for ${entries.length} disk(s).`, 'success');
+          showToast(`✓ Format complete for ${entries.length} disk(s).`, 'success');
+          recordAction('Monitor', 'success', entries.length, 'complete');
+        }
+        refreshSlotsQuietly();
+      } else if (!manual) {
+        setSlotActionStatus(`<span class="spin"></span> Monitoring ${monitorState.activePaths.size}/${monitorState.paths.length} disk(s)...`, 'info');
+      }
+    })
+    .catch(err => {
+      const msg = String(err && err.message ? err.message : '');
+      if (/Polling cancelled by another session/i.test(msg)) {
+        setSlotActionStatus('Polling cancelled from another session.', 'info');
+        recordAction('Monitor', 'info', batch.length, 'cancelled by another session');
+      } else {
+        setSlotActionStatus(`✗ ${msg || 'monitor poll failed'}`, 'error');
+        recordAction('Monitor', 'error', batch.length, msg || 'monitor poll failed');
+      }
+      stopMonitor({ silent: true, keepLatest: true });
+    })
+    .finally(() => {
+      monitorState.polling = false;
+      updateActionButtons();
+    });
+}
+
+function runHealthEnrichment(fromSlotAction) {
+  const selectedPresent = fromSlotAction ? getSelectedPresentSlots(true) : [];
+  if (fromSlotAction && !selectedPresent.length) return;
+
+  if (fromSlotAction) {
+    slotActionState.runningAction = 'health';
+    setSlotActionStatus('<span class="spin"></span> Running health scan...', 'info');
+    updateActionButtons();
+  } else {
+    globalActionBusy = true;
+    setGlobalSlotButtonsDisabled(true);
+    setStatus('slots-status', '<span class="spin"></span> Showing health...', 'info');
+  }
+
+  startElapsedTimer(secs => {
+    if (fromSlotAction) {
+      setSlotActionStatus(`<span class="spin"></span> Running health scan... (${secs}s)`, 'info');
+    } else {
+      setStatus('slots-status', `<span class="spin"></span> Showing health... (${secs}s)`, 'info');
+    }
+  });
+
+  postJSON('/api/health', {})
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      const devices = Array.isArray(data.devices) ? data.devices : [];
+      devices.forEach(d => {
+        if (d.path) healthByPath[d.path] = d.health;
+      });
+      healthLoadedAt = new Date();
+      slotsData = slotsData.map(applyHealthOverlay);
+
+      if (fromSlotAction) {
+        selectedPresent.forEach(s => {
+          const slotObj = getSlotObj(s.slot);
+          if (!slotObj || !slotObj.device) return;
+          slotActionState.healthResults[s.slot] = {
+            health: slotObj.device.health,
+            elapsed: data.elapsed || 0,
+            rc: data.rc,
+            at: new Date(),
+          };
+        });
+      }
+
+      renderAll();
+
+      const elapsed = typeof data.elapsed === 'number' ? fmtDuration(data.elapsed) : '0s';
+      const warn = typeof data.rc === 'number' && data.rc !== 0 ? ` (exit ${data.rc})` : '';
+      renderSlotsSummary(`Health shown in ${elapsed} for ${devices.length} device(s).${warn}`);
+      if (fromSlotAction) {
+        setSlotActionStatus(`✓ Health scan done in ${elapsed} for ${selectedPresent.length} selected disk(s).${warn}`, 'success');
+        showToast(`✓ Health scan done in ${elapsed} for ${selectedPresent.length} disk(s).${warn}`, 'success');
+        recordAction('Health', 'success', selectedPresent.length, `done in ${elapsed}${warn}`);
+      } else {
+        showToast(`✓ Health shown in ${elapsed} for ${devices.length} device(s).${warn}`, 'success');
+        recordAction('Show Health', 'success', devices.length, `done in ${elapsed}${warn}`);
+      }
+      refreshSlotsQuietly();
+    })
+    .catch(err => {
+      if (fromSlotAction) {
+        setSlotActionStatus(`✗ ${err.message}`, 'error');
+        showToast(`✗ Health scan failed: ${err.message}`, 'error');
+        recordAction('Health', 'error', selectedPresent.length, err.message);
+      } else {
+        setStatus('slots-status', `✗ ${err.message}`, 'error');
+        showToast(`✗ Health failed: ${err.message}`, 'error');
+        recordAction('Show Health', 'error', 0, err.message);
+      }
+    })
+    .finally(() => {
+      stopElapsedTimer();
+      if (fromSlotAction) {
+        if (slotActionState.runningAction === 'health') {
+          slotActionState.runningAction = null;
+        }
+        updateActionButtons();
+        renderSlotActionPanel();
+      } else {
+        globalActionBusy = false;
+        setGlobalSlotButtonsDisabled(false);
+      }
+    });
+}
+
+function runSpeedForSelection() {
+  const selectedPresent = getSelectedPresentSlots(true);
+  if (!selectedPresent.length) return;
+  const paths = selectedPresent.map(s => s.device.path);
+  const startedAt = new Date();
+
+  slotActionState.runningAction = 'speed';
+  setSlotActionStatus(`<span class="spin"></span> Running speed test for ${paths.length} disk(s)...`, 'info');
+  updateActionButtons();
+
+  startElapsedTimer(secs => {
+    setSlotActionStatus(`<span class="spin"></span> Running speed test for ${paths.length} disk(s)... (${secs}s)`, 'info');
+  });
+
+  postJSON('/api/speedtest', { devices: paths })
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      const results = Array.isArray(data.results) ? data.results : [];
+      const byPath = new Map(results.map(r => [r.device, r]));
+      const now = new Date();
+      const batchRows = selectedPresent.map(s => {
+        const r = byPath.get(s.device.path);
+        const speed = r ? (r.speed || '?') : '?';
+        const slot = Number.isInteger(Number(r && r.slot)) ? Number(r.slot) : s.slot;
+        return {
+          slot,
+          device: s.device.path,
+          speed,
+          at: now.toISOString(),
+        };
+      }).sort((a, b) => {
+        const sa = Number.isInteger(Number(a.slot)) ? Number(a.slot) : 999;
+        const sb = Number.isInteger(Number(b.slot)) ? Number(b.slot) : 999;
+        return sa - sb;
+      });
+
+      batchRows.forEach(row => {
+        slotActionState.speedResultsBySlot[row.slot] = {
+          speed: row.speed,
+          at: now,
+        };
+      });
+
+      slotActionState.speedLastRun = {
+        startedAt: startedAt.toISOString(),
+        finishedAt: now.toISOString(),
+        rows: batchRows,
+      };
+
+      renderSlotActionPanel();
+      setSlotActionStatus(`✓ Speed test complete for ${selectedPresent.length} disk(s).`, 'success');
+      showToast(`✓ Speed test complete for ${selectedPresent.length} disk(s).`, 'success');
+      recordAction('Speed Test', 'success', selectedPresent.length, 'complete');
+    })
+    .catch(err => {
+      setSlotActionStatus(`✗ ${err.message}`, 'error');
+      showToast(`✗ Speed test failed: ${err.message}`, 'error');
+      recordAction('Speed Test', 'error', selectedPresent.length, err.message);
+    })
+    .finally(() => {
+      stopElapsedTimer();
+      if (slotActionState.runningAction === 'speed') {
+        slotActionState.runningAction = null;
+      }
+      updateActionButtons();
+      renderSlotActionPanel();
+    });
+}
+
+function runFormatForSelection() {
+  const selectedPresent = getSelectedPresentSlots(true);
+  if (!selectedPresent.length) return;
+
+  const lines = selectedPresent.map(s => `Slot ${s.slot}: ${s.device.path}`).join('\n');
+
+  showConfirmDialog(
+    `Format ${selectedPresent.length} Disk(s)?`,
+    'This will permanently erase all data on the selected disk(s). This action cannot be undone.',
+    lines
+  ).then(ok => {
+    if (!ok) {
+      recordAction('Format', 'info', selectedPresent.length, 'cancelled');
+      return;
+    }
+
+    const pathToSlot = new Map(selectedPresent.map(s => [s.device.path, s.slot]));
+    const paths = selectedPresent.map(s => s.device.path);
+
+    slotActionState.runningAction = 'format';
+    setSlotActionStatus(`<span class="spin"></span> Starting format for ${paths.length} disk(s)...`, 'info');
+    updateActionButtons();
+
+    postJSON('/api/format/start', { devices: paths })
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      const started = Array.isArray(data.started) ? data.started : [];
+      const failed = Array.isArray(data.failed) ? data.failed : [];
+      const now = new Date();
+
+      started.forEach(path => {
+        const slot = pathToSlot.get(path);
+        if (!Number.isInteger(slot)) return;
+        slotActionState.formatResults[slot] = {
+          state: 'started',
+          detail: 'format started',
+          at: now,
+        };
+      });
+
+      failed.forEach(f => {
+        const slot = pathToSlot.get(f.path);
+        if (!Number.isInteger(slot)) return;
+        slotActionState.formatResults[slot] = {
+          state: 'failed_start',
+          detail: f.reason || 'not started',
+          at: now,
+        };
+      });
+
+      renderSlotActionPanel();
+
+      if (started.length > 0) {
+        const failTail = failed.length ? ` ${failed.length} failed to start.` : '';
+        setSlotActionStatus(`✓ Format started for ${started.length} disk(s). Auto-monitoring started.${failTail}`, 'success');
+        showToast(`✓ Format started for ${started.length} disk(s).${failTail}`, failed.length ? 'warn' : 'success');
+        recordAction('Format', failed.length ? 'info' : 'success', started.length, failed.length ? `${failed.length} failed to start` : 'started');
+        startMonitorForPaths(started);
+      } else {
+        setSlotActionStatus(`✗ Format failed to start for selected disks.`, 'error');
+        showToast(`✗ Format failed to start for all selected disks.`, 'error');
+        recordAction('Format', 'error', selectedPresent.length, 'failed to start');
+      }
+    })
+    .catch(err => {
+      setSlotActionStatus(`✗ ${err.message}`, 'error');
+      showToast(`✗ Format error: ${err.message}`, 'error');
+      recordAction('Format', 'error', selectedPresent.length, err.message);
+    })
+    .finally(() => {
+      if (slotActionState.runningAction === 'format') {
+        slotActionState.runningAction = null;
+      }
+      updateActionButtons();
+      renderSlotActionPanel();
+    });
+  });
+}
+
+function loadSlotsData() {
+  if (slotsLoading) return;
+  slotsLoading = true;
+  setGlobalSlotButtonsDisabled(true);
   $('slots-table-wrap').classList.add('hidden');
-  setStatus('slots-status', '<span class="spin"></span> Loading...', 'info');
+  setStatus('slots-status', '<span class="spin"></span> Loading slot status...', 'info');
+
+  // Show skeleton chassis during load
+  $('slots-panel-wrap').classList.remove('hidden');
+  $('slots-grid').innerHTML = Array.from({length: 12}, (_, i) =>
+    `<div class="r510-bay skeleton" style="min-height:62px" aria-hidden="true"></div>`
+  ).join('');
 
   fetch('/api/missing').then(r => r.json())
     .then(data => {
-      if (data.error) { setStatus('slots-status', `✗ ${data.error}`, 'error'); return; }
-      $('slots-tbody').innerHTML = data.slots.map(s => {
-        const badge = s.status === 'PRESENT'
-          ? '<span class="badge badge-green">PRESENT</span>'
-          : '<span class="badge badge-red">MISSING</span>';
-        const d = s.device;
-        return `<tr>
-          <td class="cyan">${s.slot}</td>
-          <td>${badge}</td>
-          <td>${d ? fmtBadge(d.fmt_status, d.zeroed) : '<span class="dim">—</span>'}</td>
-          <td>${d ? `<span class="dim">${d.path}</span>` : '<span class="dim">—</span>'}</td>
-          <td>${d ? (d.serial || '<span class="dim">N/A</span>') : '<span class="dim">—</span>'}</td>
-          <td>${d ? (d.model || '<span class="dim">unknown</span>') : '<span class="dim">—</span>'}</td>
-        </tr>`;
-      }).join('');
-      const missing = data.slots.filter(s => s.status === 'MISSING').length;
-      setStatus('slots-status',
-        missing ? `⚠ ${missing} slot(s) MISSING out of ${data.slots.length}.`
-                : `✓ All ${data.slots.length} slots present.`,
-        missing ? 'error' : 'success');
-      $('slots-table-wrap').classList.remove('hidden');
+      if (data.error) throw new Error(data.error);
+      slotsData = normalizeSlots(data.slots);
+      const validSlots = new Set(slotsData.map(s => s.slot));
+      Array.from(selectedSlots).forEach(slot => {
+        if (!validSlots.has(slot)) selectedSlots.delete(slot);
+      });
+      ensurePrimarySlot();
+      renderAll();
+      renderSlotsSummary();
+      refreshFormatHistoryFromLogs().finally(() => {
+        renderSlotActionPanel();
+      });
     })
     .catch(err => setStatus('slots-status', `✗ ${err.message}`, 'error'))
-    .finally(() => { btn.disabled = false; });
+    .finally(() => {
+      slotsLoading = false;
+      setGlobalSlotButtonsDisabled(false);
+    });
+}
+
+function toggleSlotSelection(slot) {
+  if (!Number.isInteger(slot)) return;
+  if (selectedSlots.has(slot)) {
+    selectedSlots.delete(slot);
+    if (primarySlot === slot) ensurePrimarySlot();
+  } else {
+    selectedSlots.add(slot);
+    primarySlot = slot;
+  }
+  ensurePrimarySlot();
+  renderR510Panel();
+  renderSlotActionPanel();
+  const summary = selectionSummary();
+  if (summary.total) {
+    setSlotActionStatus(`Selected ${summary.total} bay(s), ${summary.actionable} actionable.`, '');
+  } else {
+    setSlotActionStatus('Selection cleared.', '');
+  }
+}
+
+function clearSelection() {
+  setSelection([]);
+  lastRowCheckboxSlot = null;
+  setSlotActionStatus('Selection cleared.', '');
+}
+
+function startMonitorForSelection() {
+  const paths = getSelectedPaths(true);
+  if (!paths.length) return;
+  startMonitorForPaths(paths);
+}
+
+$('slots-refresh-btn').addEventListener('click', loadSlotsData);
+$('slots-health-btn').addEventListener('click', () => runHealthEnrichment(false));
+$('slot-select-present-btn').addEventListener('click', selectPresent);
+$('slot-select-invert-btn').addEventListener('click', invertSelection);
+
+$('slots-export-excel-btn').addEventListener('click', () => {
+  const present = slotsData.filter(s => s.status === 'PRESENT' && s.device);
+  if (!present.length) { alert('No present disks to export.'); return; }
+
+  const headers = ['Model', 'Serial', 'Health'];
+  const colKeys = ['model', 'serial', 'health'];
+
+  const rows = present.map(s => [
+    s.device.model || '',
+    s.device.serial || '',
+    (s.device.health != null && s.device.health !== '?') ? String(s.device.health) + '%' : 'N/A',
+  ]);
+
+  const HEADER_STYLE = {
+    font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 },
+    fill: { patternType: 'solid', fgColor: { rgb: '1E2228' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: {
+      top:    { style: 'thin', color: { rgb: '444C56' } },
+      bottom: { style: 'thin', color: { rgb: '444C56' } },
+      left:   { style: 'thin', color: { rgb: '444C56' } },
+      right:  { style: 'thin', color: { rgb: '444C56' } },
+    },
+  };
+  const dataBorder = {
+    top:    { style: 'thin', color: { rgb: 'DDDDDD' } },
+    bottom: { style: 'thin', color: { rgb: 'DDDDDD' } },
+    left:   { style: 'thin', color: { rgb: 'DDDDDD' } },
+    right:  { style: 'thin', color: { rgb: 'DDDDDD' } },
+  };
+
+  const ws = {};
+  // Write header row
+  headers.forEach((h, c) => {
+    const addr = XLSX.utils.encode_cell({ r: 0, c });
+    ws[addr] = { v: h, t: 's', s: HEADER_STYLE };
+  });
+  // Write data rows
+  rows.forEach((row, r) => {
+    const isEven = r % 2 === 1;
+    row.forEach((val, c) => {
+      const addr = XLSX.utils.encode_cell({ r: r + 1, c });
+      ws[addr] = {
+        v: val, t: 's',
+        s: {
+          font: { sz: 11 },
+          fill: isEven
+            ? { patternType: 'solid', fgColor: { rgb: 'F5F5F5' } }
+            : { patternType: 'none' },
+          alignment: { horizontal: c === 2 ? 'center' : 'left', vertical: 'center' },
+          border: dataBorder,
+        },
+      };
+    });
+  });
+
+  ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: headers.length - 1 } });
+
+  // Auto-fit column widths
+  ws['!cols'] = headers.map((h, i) => {
+    const maxLen = rows.reduce((max, row) => Math.max(max, String(row[i] || '').length), h.length);
+    return { wch: maxLen + 4 };
+  });
+
+  // Freeze header row
+  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Disks');
+  const date = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `disks_${date}.xlsx`);
 });
+
+$('slot-run-health-btn').addEventListener('click', () => runHealthEnrichment(true));
+$('slot-run-speed-btn').addEventListener('click', runSpeedForSelection);
+$('slot-run-format-btn').addEventListener('click', runFormatForSelection);
+$('slot-run-monitor-btn').addEventListener('click', startMonitorForSelection);
+$('slot-clear-selection-btn').addEventListener('click', clearSelection);
+
+$('slot-monitor-pause-btn').addEventListener('click', () => {
+  if (!monitorState.active) return;
+  monitorState.paused = !monitorState.paused;
+  renderMonitorState();
+  setSlotActionStatus(
+    monitorState.paused
+      ? `⏸ Monitoring paused (${monitorState.interval}s)`
+      : '<span class="spin"></span> Monitoring resumed...',
+    'info'
+  );
+});
+
+$('slot-monitor-poll-btn').addEventListener('click', () => {
+  if (!monitorState.active) return;
+  pollMonitor(true);
+});
+
+$('slot-monitor-stop-btn').addEventListener('click', () => {
+  const monitoredCount = monitorState.paths.length;
+  monitorPollControl('cancel')
+    .then(() => {
+      stopMonitor({ silent: true, keepLatest: false });
+      setSlotActionStatus('Polling cancelled across sessions.', 'info');
+      recordAction('Monitor', 'info', monitoredCount, 'polling cancelled');
+    })
+    .catch(err => {
+      setSlotActionStatus(`✗ ${err.message}`, 'error');
+    });
+});
+
+$('slot-monitor-int-minus').addEventListener('click', () => {
+  monitorState.interval = Math.max(1, monitorState.interval - 1);
+  renderMonitorState();
+  restartMonitorTimer();
+});
+
+$('slot-monitor-int-plus').addEventListener('click', () => {
+  monitorState.interval = Math.min(60, monitorState.interval + 1);
+  renderMonitorState();
+  restartMonitorTimer();
+});
+
+$('slot-action-panel-toggle').addEventListener('click', () => toggleSectionCollapse('slotActionPanel'));
+$('slot-speed-run-toggle').addEventListener('click', () => toggleSectionCollapse('speedRun'));
+$('slot-monitor-toggle').addEventListener('click', () => toggleSectionCollapse('monitor'));
+
+$('slots-grid').addEventListener('click', e => {
+  if (e.button !== 0) return;
+  const bay = e.target.closest('.r510-bay');
+  if (!bay) return;
+  const slot = Number(bay.dataset.slot);
+  const now = Date.now();
+  if (toggleSlotSelection.lastSlot === slot && now - (toggleSlotSelection.lastTs || 0) < 160) return;
+  toggleSlotSelection.lastSlot = slot;
+  toggleSlotSelection.lastTs = now;
+  toggleSlotSelection(slot);
+});
+
+$('slots-tbody').addEventListener('click', e => {
+  if (e.button !== 0) return;
+  const actionBtn = e.target.closest('.slots-row-action-btn');
+  if (actionBtn) {
+    e.preventDefault();
+    const slot = Number(actionBtn.dataset.slot);
+    const action = String(actionBtn.dataset.action || '');
+    runTableActionForSlot(slot, action);
+    return;
+  }
+
+  if (e.target.closest('input,button,label,a')) return;
+
+  const row = e.target.closest('tr[data-slot]');
+  if (!row) return;
+  const slot = Number(row.dataset.slot);
+  toggleSlotSelection(slot);
+});
+
+$('slots-tbody').addEventListener('change', e => {
+  const checkbox = e.target.closest('.slots-row-select');
+  if (!checkbox) return;
+  const slot = Number(checkbox.dataset.slot);
+  if (!Number.isInteger(slot)) return;
+  const wantsChecked = checkbox.checked;
+  const hasChecked = selectedSlots.has(slot);
+
+  if (e.shiftKey && Number.isInteger(lastRowCheckboxSlot) && lastRowCheckboxSlot !== slot) {
+    const slotsSorted = slotsData
+      .map(s => Number(s.slot))
+      .filter(Number.isInteger)
+      .sort((a, b) => a - b);
+    const iA = slotsSorted.indexOf(lastRowCheckboxSlot);
+    const iB = slotsSorted.indexOf(slot);
+    if (iA !== -1 && iB !== -1) {
+      const [start, end] = iA < iB ? [iA, iB] : [iB, iA];
+      const range = slotsSorted.slice(start, end + 1);
+      applySlotsChecked(range, wantsChecked);
+      const summary = selectionSummary();
+      setSlotActionStatus(
+        `${wantsChecked ? 'Selected' : 'Unselected'} range (${range.length} bay(s)). ${summary.total} selected, ${summary.actionable} actionable.`,
+        ''
+      );
+      lastRowCheckboxSlot = slot;
+      return;
+    }
+  }
+
+  if (wantsChecked === hasChecked) return;
+  toggleSlotSelection(slot);
+  lastRowCheckboxSlot = slot;
+});
+
+$('slots-select-all').addEventListener('change', e => {
+  const checked = !!e.target.checked;
+  if (!checked) {
+    clearSelection();
+    lastRowCheckboxSlot = null;
+    return;
+  }
+
+  const allSlots = slotsData.map(s => Number(s.slot)).filter(Number.isInteger);
+  setSelection(allSlots);
+  lastRowCheckboxSlot = allSlots.length ? allSlots[allSlots.length - 1] : null;
+  const summary = selectionSummary();
+  setSlotActionStatus(`Selected all ${summary.total} bay(s), ${summary.actionable} actionable.`, '');
+});
+
+$('nav-tab-slots').addEventListener('click', () => setMainTab(TAB_SLOTS));
+$('nav-tab-logs').addEventListener('click', () => setMainTab(TAB_LOGS));
+$('logs-refresh-btn').addEventListener('click', () => loadLogs(true));
+$('logs-event-filter').addEventListener('change', () => {
+  logsExpandedRaw = new Set();
+  applyLogsFiltersFromInputs(true);
+});
+$('logs-search').addEventListener('input', () => {
+  if (logsSearchDebounceId) clearTimeout(logsSearchDebounceId);
+  logsSearchDebounceId = setTimeout(() => {
+    logsSearchDebounceId = null;
+    logsExpandedRaw = new Set();
+    applyLogsFiltersFromInputs(true);
+  }, 150);
+});
+$('logs-clear-filters').addEventListener('click', () => {
+  $('logs-event-filter').value = 'All';
+  $('logs-search').value = '';
+  logsExpandedRaw = new Set();
+  applyLogsFiltersFromInputs(true);
+});
+$('logs-table-body').addEventListener('click', e => {
+  const btn = e.target.closest('.logs-raw-btn');
+  if (!btn) return;
+  const rowId = String(btn.dataset.rowId || '');
+  if (!rowId) return;
+  if (logsExpandedRaw.has(rowId)) logsExpandedRaw.delete(rowId);
+  else logsExpandedRaw.add(rowId);
+  rerenderLogsFromState(false);
+});
+
+document.addEventListener('keydown', handleGlobalHotkeys);
+
+// Initialize collapsibles without transition
+function initSectionCollapse(sectionKey) {
+  const spec = collapsibleSections[sectionKey];
+  if (!spec) return;
+  const body = $(spec.bodyId);
+  const btn = $(spec.toggleId);
+  const expanded = !!collapsibleState[sectionKey];
+  if (body) {
+    if (expanded) {
+      body.style.maxHeight = 'none';
+      body.style.opacity = '1';
+      body.style.overflow = '';
+    } else {
+      body.style.maxHeight = '0';
+      body.style.opacity = '0';
+      body.style.overflow = 'hidden';
+    }
+  }
+  if (btn) {
+    btn.textContent = expanded ? 'Collapse' : 'Expand';
+    btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  }
+}
+initSectionCollapse('slotActionPanel');
+initSectionCollapse('speedRun');
+initSectionCollapse('monitor');
+setMainTab(TAB_SLOTS);
+loadSlotsData();
+setSlotActionStatus('Click a bay or table row to select or unselect it.', '');
 </script>
 </body>
 </html>

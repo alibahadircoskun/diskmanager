@@ -1,0 +1,18 @@
+[Unit]
+Description=Disk Manager Web UI
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/diskmanager
+EnvironmentFile=-/etc/default/diskmanager-web
+ExecStart=/root/diskmanager/run_web_service.sh
+Restart=always
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
