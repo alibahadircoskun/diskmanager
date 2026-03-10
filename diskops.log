@@ -1,0 +1,124 @@
+FORMAT_STARTED mode=fast slot=11 dev=/dev/sdc model= serial=
+FORMAT_STARTED mode=fast slot=5 dev=/dev/sda model=ST3300657SS serial=6SJ2FJLC
+FORMAT_STARTED mode=fast slot=8 dev=/dev/sdb model=ST3300657SS serial=6SJ4YKMF
+FORMAT_START_FAILED mode=fast slot=5 dev=/dev/sda model=ST3300657SS serial=6SJ2FJLC
+FORMAT_STARTED mode=fast slot=8 dev=/dev/sdb model= serial=
+FORMAT_STARTED mode=fast slot=5 dev=/dev/sda model= serial=
+FORMAT_COMPLETE slot=8 dev=/dev/sdb model=ST3300657SS serial=6SJ4YKMF
+FORMAT_COMPLETE slot=5 dev=/dev/sda model=ST3300657SS serial=6SJ2FJLC
+FORMAT_STARTED mode=fast slot=11 dev=/dev/sdc model= serial=
+FORMAT_STARTED mode=full slot=11 dev=/dev/sdc model= serial=
+FORMAT_STARTED mode=full slot=11 dev=/dev/sdc model= serial=
+FORMAT_STARTED mode=full slot=2 dev=/dev/sdc model=ST1000NM0001 serial=Z1N4BATG
+FORMAT_STARTED mode=full slot=5 dev=/dev/sdh model=ST1000NM0001 serial=Z1N0RLFT
+FORMAT_STARTED mode=full slot=8 dev=/dev/sdm model=ST900MM0006 serial=S0N0L8H5
+FORMAT_STARTED mode=full slot=11 dev=/dev/sdn model=WD9002BKTG-23E serial=WXQ1E93FRJK2
+FORMAT_STARTED mode=full slot=1 dev=/dev/sdk model=WD9001BKHG serial=WXL1E32HSLPL
+FORMAT_STARTED mode=full slot=4 dev=/dev/sdl model=WD9001BKHG serial=WX31EB1FPT48
+FORMAT_COMPLETE slot=11 dev=/dev/sdn model=WD9002BKTG-23E serial=WXQ1E93FRJK2
+FORMAT_COMPLETE slot=1 dev=/dev/sdk model=WD9001BKHG serial=WXL1E32HSLPL
+FORMAT_COMPLETE slot=4 dev=/dev/sdl model=WD9001BKHG serial=WX31EB1FPT48
+SPEEDTEST slot=11 read=0.0 kB/s write=0.0 kB/s
+SPEEDTEST slot=11 read=0.0 kB/s write=0.0 kB/s
+SPEEDTEST slot=11 read=202 MB/s write=68.7 MB/s
+SPEEDTEST slot=1 read=196 MB/s write=--
+SPEEDTEST slot=11 read=?
+SPEEDTEST slot=11 read=?
+SPEEDTEST slot=1 read=?
+SPEEDTEST slot=11 read=?
+SPEEDTEST slot=4 read=?
+SPEEDTEST slot=1 read=198 MB/s
+SPEEDTEST slot=1 read=198 MB/s slot=11 read=202 MB/s
+FORMAT_COMPLETE slot=8 dev=/dev/sdm model=ST900MM0006 serial=S0N0L8H5
+SPEEDTEST slot=1 read=198 MB/s
+FORMAT_COMPLETE slot=2 dev=/dev/sdc model=ST1000NM0001 serial=Z1N4BATG
+FORMAT_COMPLETE slot=5 dev=/dev/sdh model=ST1000NM0001 serial=Z1N0RLFT
+FORMAT_STARTED mode=full slot=2 dev=/dev/sdc model=ST3600057SS serial=6SL43LSL
+FORMAT_STARTED mode=full slot=5 dev=/dev/sdh model=ST3600057SS serial=6SL1V37J
+FORMAT_ABORTED — devices: /dev/sdl /dev/sdo /dev/sdm /dev/sdp
+FORMAT_STARTED mode=full slot=1 dev=/dev/sdl model=ST6000NM020B serial=WX01DXSQ0000R434NAQF
+FORMAT_STARTED mode=full slot=2 dev=/dev/sdo model=ST16000NM000J-2TW103 serial=ZR5D6Y95
+FORMAT_STARTED mode=full slot=4 dev=/dev/sdm model=ST6000NM020B serial=WX014QXQ0000C4079ZZG
+FORMAT_STARTED mode=full slot=5 dev=/dev/sdp model=ST16000NM000J-2TW103 serial=ZR5DGS0G
+FORMAT_ABORTED — devices: /dev/sdl /dev/sdm
+FORMAT_STARTED mode=full slot=2 dev=/dev/sdl model=ST6000NM020B serial=WX01DXSQ0000R434NAQF
+FORMAT_STARTED mode=full slot=5 dev=/dev/sdm model=ST6000NM020B serial=WX014QXQ0000C4079ZZG
+FORMAT_COMPLETE slot=2 dev=/dev/sdc model=ST3600057SS serial=6SL43LSL
+FORMAT_COMPLETE slot=5 dev=/dev/sdh model=ST3600057SS serial=6SL1V37J
+MISSING_SLOTS count=1 slots=0
+MISSING_SLOTS count=1 slots=0
+MISSING_SLOTS count=1 slots=0
+MISSING_SLOTS count=3 slots=0, 1, 9
+MISSING_SLOTS count=2 slots=0, 9
+MISSING_SLOTS count=10 slots=0, 1, 2, 3, 4, 5, 6, 8, 9, 11
+MISSING_SLOTS count=5 slots=0, 3, 6, 9, 10
+MISSING_SLOTS count=7 slots=0, 1, 3, 5, 6, 9, 10
+MISSING_SLOTS count=10 slots=0, 1, 3, 5, 6, 7, 8, 9, 10, 11
+MISSING_SLOTS count=1 slots=9
+FORMAT_ABORTED — devices: /dev/sdv /dev/sdr /dev/sdc /dev/sdw /dev/sds /dev/sdl /dev/sdu /dev/sdt /dev/sdm /dev/sdx /dev/sdp
+FORMAT_STARTED mode=full slot=0 dev=/dev/sdv model=ST2000NM0023     serial=Z1X08Q36
+FORMAT_STARTED mode=full slot=1 dev=/dev/sdr model=WD2001FYYG serial=WMC160095776
+FORMAT_STARTED mode=full slot=2 dev=/dev/sdc model=HUH721010AL5200 serial=7JJHPNWG
+FORMAT_STARTED mode=full slot=3 dev=/dev/sdw model=WD2001FYYG serial=WMC160095839
+FORMAT_STARTED mode=full slot=4 dev=/dev/sds model=ST3600057SS serial=6SL9RVRB
+FORMAT_STARTED mode=full slot=5 dev=/dev/sdl model=WD2001FYYG serial=WMC160097287
+FORMAT_STARTED mode=full slot=6 dev=/dev/sdu model=ST3000NM0023     serial=Z1Y1FST8
+FORMAT_STARTED mode=full slot=7 dev=/dev/sdt model=WD2001FYYG       serial=WMC160088386
+FORMAT_STARTED mode=full slot=8 dev=/dev/sdm model=MG03SCA400 serial=15V0A2P4FVL8
+FORMAT_STARTED mode=full slot=10 dev=/dev/sdx model=WD2001FYYG serial=WMC160094642
+FORMAT_STARTED mode=full slot=11 dev=/dev/sdp model=WD2001FYYG serial=WMC160095631
+FORMAT_COMPLETE slot=4 dev=/dev/sds model=ST3600057SS serial=6SL9RVRB
+FORMAT_FAILED slot=0 dev=/dev/sdv model=ST2000NM0023     serial=Z1X08Q36
+FORMAT_COMPLETE slot=10 dev=/dev/sdx model=WD2001FYYG serial=WMC160094642
+FORMAT_COMPLETE slot=1 dev=/dev/sdr model=WD2001FYYG serial=WMC160095776
+FORMAT_COMPLETE slot=5 dev=/dev/sdl model=WD2001FYYG serial=WMC160097287
+FORMAT_COMPLETE slot=11 dev=/dev/sdp model=WD2001FYYG serial=WMC160095631
+FORMAT_COMPLETE slot=7 dev=/dev/sdt model=WD2001FYYG       serial=WMC160088386
+FORMAT_COMPLETE slot=3 dev=/dev/sdw model=WD2001FYYG serial=WMC160095839
+FORMAT_FAILED slot=6 dev=/dev/sdu model=ST3000NM0023     serial=Z1Y1FST8
+FORMAT_COMPLETE slot=2 dev=/dev/sdc model=HUH721010AL5200 serial=7JJHPNWG
+FORMAT_COMPLETE slot=8 dev=/dev/sdm model=MG03SCA400 serial=15V0A2P4FVL8
+FORMAT_STARTED mode=full slot=0 dev=/dev/sds model=AL13SEB300       serial=X3T0A10GFRD6
+FORMAT_STARTED mode=full slot=1 dev=/dev/sdt model=HUS156030VLS600 serial=JTX51M9J
+FORMAT_STARTED mode=full slot=2 dev=/dev/sdm model=ST3300657SS serial=6SJ5NR31
+FORMAT_STARTED mode=full slot=3 dev=/dev/sdy model=HUC109030CSS600  serial=KLW63ULF
+FORMAT_STARTED mode=full slot=4 dev=/dev/sdu model=AL13SEB300       serial=X3U0A0QCFRD6
+FORMAT_STARTED mode=full slot=5 dev=/dev/sdp model=ST3300657SS      serial=6SJ4P0FK
+FORMAT_STARTED mode=full slot=6 dev=/dev/sdx model=AL13SEB300       serial=X3T0A13MFRD6
+FORMAT_STARTED mode=full slot=7 dev=/dev/sdv model=HUC109030CSS600  serial=KLW63ZEF
+FORMAT_STARTED mode=full slot=8 dev=/dev/sdr model=ST3300657SS      serial=6SJ4LXT5
+FORMAT_STARTED mode=full slot=10 dev=/dev/sdw model=AL13SEB300       serial=X3T0A11DFRD6
+FORMAT_STARTED mode=full slot=11 dev=/dev/sdz model=ST3300657SS serial=6SJ4LEY3
+FORMAT_COMPLETE slot=1 dev=/dev/sdt model=HUS156030VLS600 serial=JTX51M9J
+FORMAT_COMPLETE slot=7 dev=/dev/sdv model=HUC109030CSS600  serial=KLW63ZEF
+FORMAT_COMPLETE slot=3 dev=/dev/sdy model=HUC109030CSS600  serial=KLW63ULF
+FORMAT_COMPLETE slot=11 dev=/dev/sdz model=ST3300657SS serial=6SJ4LEY3
+FORMAT_COMPLETE slot=8 dev=/dev/sdr model=ST3300657SS      serial=6SJ4LXT5
+FORMAT_COMPLETE slot=5 dev=/dev/sdp model=ST3300657SS      serial=6SJ4P0FK
+FORMAT_COMPLETE slot=2 dev=/dev/sdm model=ST3300657SS serial=6SJ5NR31
+FORMAT_COMPLETE slot=6 dev=/dev/sdx model=AL13SEB300       serial=X3T0A13MFRD6
+FORMAT_COMPLETE slot=4 dev=/dev/sdu model=AL13SEB300       serial=X3U0A0QCFRD6
+FORMAT_COMPLETE slot=0 dev=/dev/sds model=AL13SEB300       serial=X3T0A10GFRD6
+FORMAT_COMPLETE slot=10 dev=/dev/sdw model=AL13SEB300       serial=X3T0A11DFRD6
+FORMAT_STARTED mode=fast slot=10 dev=/dev/sdw model= serial=Z1Y1FST8
+FORMAT_STARTED mode=fast slot=11 dev=/dev/sds model= serial=Z1X08Q36
+FORMAT_COMPLETE slot=11 dev=/dev/sds model= serial=Z1X08Q36
+FORMAT_FAILED slot=10 dev=/dev/sdw model= serial=Z1Y1FST8
+FORMAT_STARTED mode=full slot=2 dev=/dev/sdm model= serial=Z1Y1FST8
+FORMAT_STARTED mode=full slot=5 dev=/dev/sdp model= serial=Z1X08Q36
+FORMAT_FAILED slot=5 dev=/dev/sdp model= serial=Z1X08Q36
+FORMAT_COMPLETE slot=2 dev=/dev/sdm model= serial=Z1Y1FST8
+FORMAT_COMPLETE slot=2 dev=/dev/sdm model= serial=Z1Y1FST8
+FORMAT_FAILED slot=5 dev=/dev/sdp model= serial=Z1X08Q36
+FORMAT_STARTED mode=full slot=2 dev=/dev/sdt model=ST9300603SS serial=3SE0DJ8Q
+FORMAT_STARTED mode=full slot=5 dev=/dev/sds model=AL13SEB300 serial=X3T0A024FRD6
+FORMAT_STARTED mode=full slot=8 dev=/dev/sdr model=AL13SEB300 serial=X3T0A13VFRD6
+FORMAT_STARTED mode=full slot=11 dev=/dev/sdp model=ST3300657SS serial=6SJ5NQYQ
+FORMAT_COMPLETE slot=11 dev=/dev/sdp model=ST3300657SS serial=6SJ5NQYQ
+FORMAT_COMPLETE slot=8 dev=/dev/sdr model=AL13SEB300 serial=X3T0A13VFRD6
+FORMAT_COMPLETE slot=2 dev=/dev/sdt model=ST9300603SS serial=3SE0DJ8Q
+FORMAT_FAILED slot=5 dev=/dev/sds model=AL13SEB300 serial=X3T0A024FRD6
+MISSING_SLOTS count=12 slots=0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+MISSING_SLOTS count=12 slots=0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+SPEEDTEST slot=2 read=208 MB/s slot=5 read=208 MB/s slot=8 read=206 MB/s
+MISSING_SLOTS count=9 slots=0, 1, 3, 4, 6, 7, 9, 10, 11

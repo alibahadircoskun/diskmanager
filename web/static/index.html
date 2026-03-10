@@ -441,9 +441,7 @@
   }
   .r510-bay {
     position: relative;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    display: block;
     width: 100%;
     min-height: 62px;
     padding: 10px 10px 10px 36px;
@@ -458,6 +456,12 @@
     touch-action: manipulation;
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform 0.1s ease, background var(--transition-fast);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .bay-main-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 22px;
   }
   .r510-bay:hover { border-color: #4b5563; transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 7px rgba(0,0,0,0.4); }
   .r510-bay:active { transform: translateY(0); box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.3); }
@@ -498,24 +502,57 @@
     font-weight: 600;
     font-size: 12px;
     white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .bay-serial {
+    min-width: 0;
+    flex: 1 1 180px;
+    color: rgba(195, 205, 217, 0.9);
+    font-size: 10px;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .bay-state {
     margin-left: auto;
     font-size: 11px;
     color: var(--dim);
+    flex-shrink: 0;
   }
   .bay-health {
     margin-left: 8px;
     font-size: 11px;
     color: var(--dim);
     font-weight: 600;
+    flex-shrink: 0;
   }
   .bay-size {
     margin-left: 6px;
     font-size: 10px;
     color: var(--dim);
     font-weight: 400;
+    flex-shrink: 0;
   }
+  .bay-progress-row {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .bay-progress-row .prog-wrap {
+    width: 100%;
+    max-width: none;
+    height: 6px;
+  }
+  .bay-progress-pct {
+    min-width: 42px;
+    text-align: right;
+    font-size: 10px;
+    color: var(--dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .bay-progress-row.waiting .bay-progress-pct { color: var(--yellow-bright); }
   .r510-bay.bay--green { border-color: rgba(63,185,80,0.55); }
   .r510-bay.bay--green .bay-led {
     background: var(--green-bright);
@@ -549,23 +586,14 @@
   .r510-bay.bay--selected .bay-state {
     color: #c3dcff;
   }
+  .r510-bay.bay--selected .bay-serial {
+    color: #d5e7ff;
+  }
   .r510-bay.bay--selected .bay-led {
     border-color: rgba(255,255,255,0.45);
     box-shadow: 0 0 10px rgba(88,166,255,0.5);
   }
-  .bay-selected-pill {
-    margin-left: 6px;
-    padding: 1px 6px;
-    border-radius: 10px;
-    border: 1px solid rgba(121,192,255,0.8);
-    background: rgba(88,166,255,0.18);
-    color: #dbeafe;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    line-height: 1.3;
-  }
+  .r510-bay.bay--selected .bay-progress-pct { color: #c3dcff; }
   .r510-bay.bay--monitoring {
     box-shadow: inset 0 0 0 1px rgba(88,166,255,0.5), inset 0 -2px 0 rgba(88,166,255,0.45);
   }
@@ -2472,22 +2500,50 @@ function renderR510Panel() {
     const s = bySlot.get(slot) || { slot, status: 'MISSING', device: null };
     const visual = slotVisualState(s);
     const isSelected = selectedSlots.has(s.slot);
-    const isMonitoring = !!(s.device && s.device.path && monitorState.activePaths.has(s.device.path));
-    const statusText = s.status === 'PRESENT' ? (visual === 'green' ? 'PRESENT' : 'WARNING') : 'MISSING';
-    const healthText = s.status === 'PRESENT' ? slotHealthText(s) : '';
-    const sizeText = s.status === 'PRESENT' && s.device && s.device.size ? s.device.size : '';
+    const devPath = s.device && s.device.path ? s.device.path : '';
+    const isMonitoring = !!(devPath && monitorState.activePaths.has(devPath));
+    const latest = devPath ? monitorState.latestByPath[devPath] : null;
+    const monitorStatus = String((latest && latest.status) || (isMonitoring ? 'waiting' : ''));
+    const showProgress = isMonitoring && (monitorStatus === 'waiting' || monitorStatus === 'started' || monitorStatus === 'formatting');
+    const isPresent = s.status === 'PRESENT';
+    const statusText = isPresent ? '' : 'MISSING';
+    const serialRaw = isPresent && s.device ? String(s.device.serial || '').trim() : '';
+    const serialText = isPresent ? `SN: ${serialRaw || 'N/A'}` : '';
+    const healthText = isPresent ? slotHealthText(s) : '';
+    const sizeText = isPresent && s.device && s.device.size ? s.device.size : '';
     const hv = slotHealthNumber(s);
     const hColor = hv !== null
       ? (hv >= 90 ? 'var(--green-bright)' : hv >= 50 ? 'var(--yellow-bright)' : 'var(--red-bright)')
       : 'var(--dim)';
-    return `<button type="button" class="r510-bay bay--${visual}${isSelected ? ' bay--selected' : ''}${isMonitoring ? ' bay--monitoring' : ''}" data-slot="${s.slot}" title="Slot ${s.slot}${isSelected ? ' selected' : ''} (click toggles selection)" aria-pressed="${isSelected ? 'true' : 'false'}">
+    const pctRaw = Number(latest && latest.progress);
+    const pct = showProgress
+      ? (monitorStatus === 'waiting' ? 0 : (Number.isFinite(pctRaw) ? Math.max(0, Math.min(100, pctRaw)) : 0))
+      : 0;
+    const pctText = `${pct.toFixed(1)}%`;
+    const fillCls = monitorStatus === 'waiting' ? 'yellow' : (pct < 50 ? 'yellow' : '');
+    const fillExtra = (monitorStatus === 'started' || monitorStatus === 'formatting') ? ' active' : '';
+    const progressRow = showProgress
+      ? `<span class="bay-progress-row${monitorStatus === 'waiting' ? ' waiting' : ''}">
+          <span class="prog-wrap"><span class="prog-fill${fillCls ? ' ' + fillCls : ''}${fillExtra}" style="width:${pct}%"></span></span>
+          <span class="bay-progress-pct">${pctText}</span>
+        </span>`
+      : '';
+    const titleText = [
+      `Slot ${s.slot}${isSelected ? ' selected' : ''}`,
+      isPresent ? (serialRaw ? `Serial: ${serialRaw}` : 'Serial: N/A') : '',
+      '(click toggles selection)',
+    ].filter(Boolean).join(' · ');
+    return `<button type="button" class="r510-bay bay--${visual}${isSelected ? ' bay--selected' : ''}${isMonitoring ? ' bay--monitoring' : ''}" data-slot="${s.slot}" title="${escapeHtml(titleText)}" aria-pressed="${isSelected ? 'true' : 'false'}">
       <span class="bay-handle" aria-hidden="true"></span>
-      <span class="bay-led" aria-hidden="true"></span>
-      <span class="bay-slot-label">Slot ${s.slot}</span>
-      ${isSelected ? '<span class="bay-selected-pill">Selected</span>' : ''}
-      <span class="bay-state">${statusText}</span>
-      ${healthText ? `<span class="bay-health" style="color:${hColor}">${escapeHtml(healthText)}</span>` : ''}
-      ${sizeText ? `<span class="bay-size">${escapeHtml(sizeText)}</span>` : ''}
+      <span class="bay-main-row">
+        <span class="bay-led" aria-hidden="true"></span>
+        <span class="bay-slot-label">Slot ${s.slot}</span>
+        ${serialText ? `<span class="bay-serial" title="${escapeHtml(serialText)}">${escapeHtml(serialText)}</span>` : ''}
+        ${statusText ? `<span class="bay-state">${statusText}</span>` : ''}
+        ${healthText ? `<span class="bay-health" style="color:${hColor}">${escapeHtml(healthText)}</span>` : ''}
+        ${sizeText ? `<span class="bay-size">${escapeHtml(sizeText)}</span>` : ''}
+      </span>
+      ${progressRow}
     </button>`;
   }).join('');
 }
