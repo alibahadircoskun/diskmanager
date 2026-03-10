@@ -88,6 +88,13 @@ if [ ! -f "$RUNNER_SRC" ]; then
     exit 1
 fi
 
+# Validate runner + Python deps before writing systemd config.
+if ! bash "$RUNNER_SRC" --help >/dev/null 2>&1; then
+    echo "Web runner preflight failed: ${RUNNER_SRC} --help" >&2
+    echo "Install web dependencies first (run ./setup.sh or pip install -r requirements.txt)." >&2
+    exit 1
+fi
+
 chmod +x "$RUNNER_SRC"
 
 escaped_script_dir="${SCRIPT_DIR//&/\\&}"

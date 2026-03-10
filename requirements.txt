@@ -1,2 +1,3 @@
-flask
-flask-limiter
+# Pinned for reproducible installs and Python 3.8 compatibility.
+Flask==3.0.3
+Flask-Limiter==3.8.0

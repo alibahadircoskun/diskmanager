@@ -13,10 +13,11 @@ Disk management tool for SAS/SATA shelves using fixed PHY paths.
 
 - Ubuntu/Debian-like system
 - Root access
-- Python 3
+- Python 3.8+
 - `sg3-utils` (`sg_format`, `sg_requests`)
 - `smartmontools` (`smartctl`)
 - `util-linux` (`lsblk`, `blockdev`)
+- Python web dependencies from `requirements.txt` (pinned versions)
 - Hard Disk Sentinel Linux console binary at `/root/HDSentinel`
 
 ## Install
@@ -27,6 +28,8 @@ From the repo directory:
 cd /root/diskmanager
 sudo bash ./setup.sh
 ```
+
+Installer script name is `setup.sh`.
 
 Useful setup flags:
 
@@ -90,8 +93,9 @@ sudo disk missing
 
 ## Web UI as a Service (survives shell exit)
 
-`setup.sh` installs dependencies, installs/updates the `diskmanager-web` systemd service,
-and restarts it (unless `--skip-web-service` is used).
+`setup.sh` installs system dependencies, installs pinned Python web dependencies from
+`requirements.txt`, installs/updates the `diskmanager-web` systemd service, and restarts
+it (unless `--skip-web-service` is used).
 
 Install/update only the web service with one command:
 
@@ -118,6 +122,8 @@ sudo bash ./install_web_service.sh --no-restart
 
 `install_web_service.sh` also rewrites `WorkingDirectory` and `ExecStart` in the
 installed unit so the service points to the current repo location.
+It runs a runner preflight (`run_web_service.sh --help`) and exits early if Flask
+dependencies are missing.
 
 Start/stop/restart/status:
 

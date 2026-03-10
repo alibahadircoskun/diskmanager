@@ -6,7 +6,8 @@ usage() {
 Usage: setup.sh [--enable-web] [--reset-web-env] [--skip-web-service] [--help]
 
 Installs CLI/web dependencies, installs HDSentinel (if missing),
-links `disk` to /usr/local/bin, and optionally installs the systemd web service.
+links `disk` to /usr/local/bin, installs pinned web Python deps from
+requirements.txt, and optionally installs the systemd web service.
 
 Options:
   --enable-web       Enable diskmanager-web service at boot.
@@ -64,7 +65,7 @@ if [ ! -f "${DISK_PY}" ]; then
     exit 1
 fi
 
-echo "Installing dependencies for disk.py..."
+echo "Installing system dependencies for disk CLI/web..."
 
 apt-get update -qq
 apt-get install -y -qq \
@@ -112,7 +113,7 @@ fi
 ln -sf "${DISK_PY}" /usr/local/bin/disk
 
 if [ -f "${REQ_FILE}" ]; then
-    echo "Installing Python dependencies for web UI..."
+    echo "Installing pinned Python dependencies for web UI from ${REQ_FILE}..."
     if ! python3 -m pip install -q -r "${REQ_FILE}"; then
         echo "Retrying pip install with --break-system-packages ..."
         python3 -m pip install -q --break-system-packages -r "${REQ_FILE}"

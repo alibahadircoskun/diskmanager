@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_PATH="${SCRIPT_DIR}/web/app.py"
+REQ_FILE="${SCRIPT_DIR}/requirements.txt"
 PYTHON_BIN="${PYTHON_BIN:-/usr/bin/python3}"
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -65,6 +66,20 @@ fi
 
 if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
     echo "Python interpreter not found: ${PYTHON_BIN}" >&2
+    exit 1
+fi
+
+if ! "$PYTHON_BIN" - <<'PY' >/dev/null 2>&1
+import flask
+import flask_limiter
+PY
+then
+    echo "Missing Python dependencies for web service (Flask / Flask-Limiter)." >&2
+    if [ -f "$REQ_FILE" ]; then
+        echo "Install them with: python3 -m pip install -r ${REQ_FILE}" >&2
+    else
+        echo "Run setup.sh to install dependencies." >&2
+    fi
     exit 1
 fi
 
