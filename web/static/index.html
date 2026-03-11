@@ -289,32 +289,37 @@
     vertical-align: middle;
   }
   .prog-fill {
+    display: block;
+    width: 0;
     height: 100%;
-    background: linear-gradient(90deg, var(--green), var(--green-bright));
+    --prog-base: linear-gradient(90deg, var(--green), var(--green-bright));
+    background-image: var(--prog-base);
     box-shadow: 0 0 8px rgba(63,185,80,0.35);
     border-radius: 99px;
     transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .prog-fill.yellow {
-    background: linear-gradient(90deg, var(--yellow), var(--yellow-bright));
+    --prog-base: linear-gradient(90deg, var(--yellow), var(--yellow-bright));
     box-shadow: 0 0 8px rgba(210,153,34,0.3);
   }
   .prog-fill.red {
-    background: linear-gradient(90deg, var(--red), var(--red-bright));
+    --prog-base: linear-gradient(90deg, var(--red), var(--red-bright));
     box-shadow: 0 0 8px rgba(248,81,73,0.3);
   }
   @keyframes progress-stripes {
-    0% { background-position: 0 0; }
-    100% { background-position: 20px 0; }
+    0% { background-position: 0 0, 0 0; }
+    100% { background-position: 20px 0, 0 0; }
   }
   .prog-fill.active {
-    background-image: linear-gradient(
-      -45deg,
-      rgba(255,255,255,0.1) 25%, transparent 25%,
-      transparent 50%, rgba(255,255,255,0.1) 50%,
-      rgba(255,255,255,0.1) 75%, transparent 75%
-    );
-    background-size: 20px 8px;
+    background-image:
+      linear-gradient(
+        -45deg,
+        rgba(255,255,255,0.16) 25%, transparent 25%,
+        transparent 50%, rgba(255,255,255,0.16) 50%,
+        rgba(255,255,255,0.16) 75%, transparent 75%
+      ),
+      var(--prog-base);
+    background-size: 20px 8px, 100% 100%;
     animation: progress-stripes 0.8s linear infinite;
   }
 
@@ -379,6 +384,70 @@
   .modal input[type=text]:focus { border-color: var(--cyan); }
   .modal input[type=text].bad  { border-color: var(--red); }
   .modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  .slot-context-menu {
+    display: none;
+    position: fixed;
+    min-width: 188px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    padding: 8px;
+    z-index: 90;
+  }
+  .slot-context-menu.open { display: block; }
+  .slot-context-menu-head {
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .slot-context-menu-meta {
+    color: var(--dim);
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
+  .slot-context-menu-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .slot-context-menu-item {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+    font-family: var(--font);
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+  }
+  .slot-context-menu-item:hover {
+    border-color: var(--cyan);
+    background: rgba(88,166,255,0.1);
+    color: var(--cyan-bright);
+  }
+  .slot-context-menu-item.danger:hover {
+    border-color: var(--red);
+    background: rgba(248,81,73,0.12);
+    color: var(--red-bright);
+  }
+  .slot-context-menu-item.primary:hover {
+    border-color: var(--green);
+    background: rgba(63,185,80,0.14);
+    color: var(--green-bright);
+  }
+  .slot-context-menu-item:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: transparent;
+    color: var(--dim);
+    border-color: transparent;
+  }
 
   .prog-controls {
     display: flex;
@@ -456,6 +525,11 @@
     touch-action: manipulation;
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform 0.1s ease, background var(--transition-fast);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .copyable-text {
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text;
   }
   .bay-main-row {
     display: flex;
@@ -553,6 +627,21 @@
     font-variant-numeric: tabular-nums;
   }
   .bay-progress-row.waiting .bay-progress-pct { color: var(--yellow-bright); }
+  .bay-progress-row.done {
+    justify-content: flex-end;
+  }
+  .bay-progress-state {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--green-bright);
+    text-shadow: 0 0 8px rgba(63,185,80,0.25);
+  }
+  .r510-bay.bay--selected .bay-progress-state {
+    color: #d5f7dd;
+  }
   .r510-bay.bay--green { border-color: rgba(63,185,80,0.55); }
   .r510-bay.bay--green .bay-led {
     background: var(--green-bright);
@@ -788,7 +877,7 @@
   }
   .slot-speed-run-row {
     display: grid;
-    grid-template-columns: 54px minmax(100px, 1fr) 116px 88px;
+    grid-template-columns: 54px minmax(110px, 1fr) minmax(120px, 1fr) minmax(140px, 1fr) 116px 88px;
     gap: 8px;
     align-items: center;
     padding: 6px 8px;
@@ -803,6 +892,11 @@
     background: transparent;
   }
   .slot-speed-run-row .path {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .slot-speed-run-row .truncate {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -964,6 +1058,12 @@
     color: var(--text);
     line-height: 1.45;
   }
+  .logs-summary-meta {
+    color: var(--dim);
+    font-size: 10px;
+    margin-top: 4px;
+    line-height: 1.35;
+  }
   .logs-device {
     color: var(--dim);
     font-family: var(--font);
@@ -1109,6 +1209,17 @@
 
 <a href="#section-slots" class="skip-link">Skip to content</a>
 <div id="toast-container" class="toast-container"></div>
+<div id="slot-context-menu" class="slot-context-menu" role="menu" aria-label="Slot actions" aria-hidden="true">
+  <div class="slot-context-menu-head" id="slot-context-menu-head">Slot Actions</div>
+  <div class="slot-context-menu-meta" id="slot-context-menu-meta">0 selected</div>
+  <div class="slot-context-menu-actions">
+    <button type="button" class="slot-context-menu-item" data-action="health" role="menuitem">Health</button>
+    <button type="button" class="slot-context-menu-item" data-action="zeroed" role="menuitem">Zeroed</button>
+    <button type="button" class="slot-context-menu-item" data-action="speed" role="menuitem">Speed Test</button>
+    <button type="button" class="slot-context-menu-item danger" data-action="format" role="menuitem">Format</button>
+    <button type="button" class="slot-context-menu-item primary" data-action="monitor" role="menuitem">Monitor</button>
+  </div>
+</div>
 
 <header>
   <h1>⬡ Disk Manager</h1>
@@ -1131,7 +1242,7 @@
       <span class="toolbar-spacer"></span>
       <button class="btn" id="slot-clear-selection-btn" disabled>Clear Selection</button>
     </div>
-    <div class="slot-toolbar-hint">Hotkeys: <b>R</b> Refresh · <b>H</b> Show Health · <b>P</b> Select Present · <b>I</b> Invert · <b>C</b> Clear Selection · <b>A</b> Toggle Select All</div>
+    <div class="slot-toolbar-hint">Hotkeys: <b>R</b> Refresh · <b>H</b> Show Health · <b>P</b> Select Present · <b>I</b> Invert · <b>C</b> Clear Selection · <b>A</b> Toggle Select All · Right-click bay/row for actions</div>
     <div class="statusbar" id="slots-status" role="status" aria-live="polite">Loading slot status...</div>
     <div class="r510-panel hidden" id="slots-panel-wrap">
       <div class="r510-panel-scroll">
@@ -1183,6 +1294,7 @@
       <div class="slot-detail-meta" id="slot-action-meta">Click bays or table rows to toggle selection and run operations.</div>
       <div class="toolbar slot-action-controls">
         <button class="btn" id="slot-run-health-btn" disabled>Health</button>
+        <button class="btn" id="slot-run-zeroed-btn" disabled>Zeroed</button>
         <button class="btn" id="slot-run-speed-btn" disabled>Speed Test</button>
         <button class="btn danger" id="slot-run-format-btn" disabled>Format</button>
         <button class="btn primary" id="slot-run-monitor-btn" disabled>Monitor</button>
@@ -1304,6 +1416,8 @@
       <div class="toolbar">
         <h2>Logs</h2>
         <button class="btn" id="logs-refresh-btn">Refresh Logs</button>
+        <button class="btn" id="logs-load-older-btn" type="button" disabled>Load Older Logs</button>
+        <button class="btn danger" id="logs-delete-selected-btn" type="button" disabled>Delete Selected</button>
         <span class="toolbar-spacer"></span>
         <span class="dim" id="logs-source">Source: —</span>
       </div>
@@ -1330,6 +1444,7 @@
         <table id="logs-table" class="logs-table">
           <thead>
             <tr>
+              <th><input type="checkbox" id="logs-select-all" aria-label="Select all visible log rows"></th>
               <th>Time</th>
               <th>Level</th>
               <th>Event</th>
@@ -1366,7 +1481,7 @@
 const $ = id => document.getElementById(id);
 const TERMINAL_STATUSES = new Set(['done', 'done_nostart', 'failed', 'lost']);
 const STATUS_DEDUPE_MS = 2000;
-const LOGS_LINE_LIMIT = 500;
+const LOGS_PAGE_SIZE = 500;
 const TAB_SLOTS = 'slots';
 const TAB_LOGS = 'logs';
 const statusCache = {};
@@ -1381,8 +1496,14 @@ let logsRows = [];
 let logsFilterEvent = 'All';
 let logsFilterQuery = '';
 let logsTotalCount = 0;
+let logsRawLines = [];
+let logsOffset = 0;
+let logsHasMore = false;
 let logsExpandedRaw = new Set();
 let logsSearchDebounceId = null;
+let logsDeleting = false;
+let logsSelectedRowIds = new Set();
+let logsRowLinesById = new Map();
 let formatLogBySerial = {};
 
 function setStatus(id, msg, cls) {
@@ -1407,11 +1528,35 @@ function fmtDuration(secs) {
   return `${s}s`;
 }
 
+const TIME_24H_OPTIONS = {
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+};
+
+const TIMESTAMP_24H_OPTIONS = {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+};
+
+function fmtTime(ts) {
+  if (!ts) return '—';
+  const d = ts instanceof Date ? ts : new Date(ts);
+  if (!Number.isFinite(d.getTime())) return String(ts);
+  return d.toLocaleTimeString([], TIME_24H_OPTIONS);
+}
+
 function fmtTimestamp(ts) {
   if (!ts) return '—';
-  const d = new Date(ts);
+  const d = ts instanceof Date ? ts : new Date(ts);
   if (!Number.isFinite(d.getTime())) return String(ts);
-  return d.toLocaleString();
+  return d.toLocaleString([], TIMESTAMP_24H_OPTIONS);
 }
 
 function showToast(msg, type, durationMs) {
@@ -1518,12 +1663,61 @@ function speedBadge(speed) {
   return `<span class="badge ${parseFloat(m[1]) >= 100 ? 'badge-green' : 'badge-yellow'}">${speed}</span>`;
 }
 
-function postJSON(url, body) {
+function postJSON(url, body, opts = {}) {
+  const timeoutMs = Number(opts.timeoutMs || 0);
+  const timeoutMessage = String(opts.timeoutMessage || '').trim();
+  const controller = (timeoutMs > 0 && typeof AbortController !== 'undefined')
+    ? new AbortController()
+    : null;
+  const timeoutId = controller
+    ? setTimeout(() => controller.abort(), timeoutMs)
+    : null;
+
   return fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-  }).then(r => r.json());
+    signal: controller ? controller.signal : undefined,
+  })
+    .then(async r => {
+      let data = null;
+      try {
+        data = await r.json();
+      } catch (_) {
+        data = null;
+      }
+      if (!r.ok) {
+        const msg = data && data.error ? data.error : `Request failed (${r.status})`;
+        const err = new Error(msg);
+        err.status = r.status;
+        err.data = data || {};
+        throw err;
+      }
+      return data || {};
+    })
+    .catch(err => {
+      if (err && err.name === 'AbortError') {
+        if (timeoutMessage) throw new Error(timeoutMessage);
+        throw new Error(`Request timed out after ${Math.max(1, Math.round(timeoutMs / 1000))}s`);
+      }
+      throw err;
+    })
+    .finally(() => {
+      if (timeoutId) clearTimeout(timeoutId);
+    });
+}
+
+function friendlyApiError(err, fallback) {
+  const msg = String(err && err.message ? err.message : '').trim();
+  const data = err && typeof err === 'object' ? err.data : null;
+  if (data && data.code === 'format_active') {
+    const active = Array.isArray(data.active_paths) ? data.active_paths.filter(Boolean) : [];
+    if (active.length) {
+      return `Blocked: format active on ${active.length} disk(s).`;
+    }
+    return 'Blocked: format is active.';
+  }
+  return msg || String(fallback || 'Request failed');
 }
 
 function monitorPollControl(action) {
@@ -1576,6 +1770,253 @@ let monitorState = {
   activePaths: new Set(),
   latestByPath: {},
 };
+let slotContextMenuState = {
+  open: false,
+  slot: null,
+  source: '',
+  x: 0,
+  y: 0,
+};
+const SLOT_CONTEXT_ACTIONS = ['health', 'zeroed', 'speed', 'format', 'monitor'];
+const MONITOR_SESSION_STORAGE_KEY = 'diskmanager.monitor.session.v1';
+const MONITOR_SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+const HEALTH_CACHE_STORAGE_KEY = 'diskmanager.health.cache.v1';
+const HEALTH_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const HEALTH_SCAN_REQUEST_TIMEOUT_MS = 95000;
+const ZEROED_SCAN_REQUEST_TIMEOUT_MS = 70000;
+let monitorSessionHydrated = false;
+let healthCacheHydrated = false;
+
+function getLocalStorageSafe() {
+  try {
+    return window.localStorage;
+  } catch (_) {
+    return null;
+  }
+}
+
+function clearPersistedHealthCache() {
+  const storage = getLocalStorageSafe();
+  if (!storage) return;
+  try {
+    storage.removeItem(HEALTH_CACHE_STORAGE_KEY);
+  } catch (_) {}
+}
+
+function persistHealthCache() {
+  const storage = getLocalStorageSafe();
+  if (!storage) return;
+  const src = healthByPath && typeof healthByPath === 'object' ? healthByPath : {};
+  const byPath = {};
+  Object.keys(src).forEach(path => {
+    const key = String(path || '').trim();
+    if (!key) return;
+    const val = src[path];
+    if (val === undefined || val === null || val === '') return;
+    byPath[key] = String(val);
+  });
+  if (!Object.keys(byPath).length) {
+    clearPersistedHealthCache();
+    return;
+  }
+  const payload = {
+    version: 1,
+    byPath,
+    loadedAt: healthLoadedAt instanceof Date ? healthLoadedAt.toISOString() : null,
+    savedAt: Date.now(),
+  };
+  try {
+    storage.setItem(HEALTH_CACHE_STORAGE_KEY, JSON.stringify(payload));
+  } catch (_) {}
+}
+
+function restoreHealthCacheIfNeeded() {
+  if (healthCacheHydrated) return;
+  healthCacheHydrated = true;
+
+  const storage = getLocalStorageSafe();
+  if (!storage) return;
+
+  let raw = '';
+  try {
+    raw = storage.getItem(HEALTH_CACHE_STORAGE_KEY) || '';
+  } catch (_) {
+    raw = '';
+  }
+  if (!raw) return;
+
+  let parsed = null;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (_) {
+    clearPersistedHealthCache();
+    return;
+  }
+  if (!parsed || typeof parsed !== 'object') {
+    clearPersistedHealthCache();
+    return;
+  }
+  const savedAtMs = Number(parsed.savedAt);
+  if (Number.isFinite(savedAtMs) && (Date.now() - savedAtMs) > HEALTH_CACHE_MAX_AGE_MS) {
+    clearPersistedHealthCache();
+    return;
+  }
+
+  const rawByPath = parsed.byPath && typeof parsed.byPath === 'object' ? parsed.byPath : {};
+  const restored = {};
+  Object.keys(rawByPath).forEach(path => {
+    const key = String(path || '').trim();
+    if (!key) return;
+    const val = rawByPath[path];
+    if (val === undefined || val === null || val === '') return;
+    restored[key] = String(val);
+  });
+  if (!Object.keys(restored).length) {
+    clearPersistedHealthCache();
+    return;
+  }
+
+  healthByPath = restored;
+  const loadedAtMs = Date.parse(parsed.loadedAt || '');
+  if (Number.isFinite(loadedAtMs)) {
+    healthLoadedAt = new Date(loadedAtMs);
+  } else if (Number.isFinite(savedAtMs)) {
+    healthLoadedAt = new Date(savedAtMs);
+  } else {
+    healthLoadedAt = new Date();
+  }
+}
+
+function uniqueNonEmptyPaths(values) {
+  return Array.from(new Set(
+    (Array.isArray(values) ? values : [])
+      .map(v => String(v || '').trim())
+      .filter(Boolean)
+  ));
+}
+
+function clampMonitorInterval(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return 5;
+  return Math.max(1, Math.min(60, Math.round(n)));
+}
+
+function clearPersistedMonitorSession() {
+  const storage = getLocalStorageSafe();
+  if (!storage) return;
+  try {
+    storage.removeItem(MONITOR_SESSION_STORAGE_KEY);
+  } catch (_) {}
+}
+
+function persistMonitorSession() {
+  const storage = getLocalStorageSafe();
+  if (!storage) return;
+  const paths = uniqueNonEmptyPaths(monitorState.paths);
+  const activePaths = uniqueNonEmptyPaths(Array.from(monitorState.activePaths));
+  const latest = {};
+  const src = monitorState.latestByPath && typeof monitorState.latestByPath === 'object'
+    ? monitorState.latestByPath
+    : {};
+  paths.forEach(path => {
+    if (src[path] && typeof src[path] === 'object') latest[path] = src[path];
+  });
+
+  const payload = {
+    version: 1,
+    active: !!monitorState.active,
+    paused: !!monitorState.paused,
+    interval: clampMonitorInterval(monitorState.interval),
+    paths,
+    activePaths,
+    latestByPath: latest,
+    savedAt: Date.now(),
+  };
+  try {
+    storage.setItem(MONITOR_SESSION_STORAGE_KEY, JSON.stringify(payload));
+  } catch (_) {}
+}
+
+function restoreMonitorSessionIfNeeded() {
+  if (monitorSessionHydrated) return;
+  monitorSessionHydrated = true;
+
+  const storage = getLocalStorageSafe();
+  if (!storage) return;
+
+  let raw = '';
+  try {
+    raw = storage.getItem(MONITOR_SESSION_STORAGE_KEY) || '';
+  } catch (_) {
+    raw = '';
+  }
+  if (!raw) return;
+
+  let parsed = null;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (_) {
+    clearPersistedMonitorSession();
+    return;
+  }
+  if (!parsed || typeof parsed !== 'object') {
+    clearPersistedMonitorSession();
+    return;
+  }
+  const savedAtMs = Number(parsed.savedAt);
+  if (Number.isFinite(savedAtMs) && (Date.now() - savedAtMs) > MONITOR_SESSION_MAX_AGE_MS) {
+    clearPersistedMonitorSession();
+    return;
+  }
+
+  const paths = uniqueNonEmptyPaths(parsed.paths);
+  if (!paths.length) {
+    clearPersistedMonitorSession();
+    return;
+  }
+
+  const rawLatest = parsed.latestByPath && typeof parsed.latestByPath === 'object'
+    ? parsed.latestByPath
+    : {};
+  const latest = {};
+  paths.forEach(path => {
+    if (rawLatest[path] && typeof rawLatest[path] === 'object') latest[path] = rawLatest[path];
+  });
+
+  const storedActive = uniqueNonEmptyPaths(parsed.activePaths).filter(path => paths.includes(path));
+  const derivedActive = paths.filter(path => {
+    const st = String((latest[path] && latest[path].status) || '');
+    return !TERMINAL_STATUSES.has(st);
+  });
+  const activePaths = storedActive.length ? storedActive : derivedActive;
+
+  monitorState.interval = clampMonitorInterval(parsed.interval);
+  monitorState.paths = paths;
+  monitorState.latestByPath = latest;
+  monitorState.activePaths = new Set(activePaths);
+  monitorState.active = !!parsed.active && monitorState.activePaths.size > 0;
+  monitorState.paused = monitorState.active ? !!parsed.paused : false;
+  monitorState.polling = false;
+
+  if (monitorState.active) {
+    slotActionState.runningAction = 'monitor';
+    monitorPollControl('resume')
+      .catch(() => {})
+      .finally(() => {
+        renderR510Panel();
+        renderSlotActionPanel();
+        setSlotActionStatus(`<span class="spin"></span> Monitoring restored (${monitorState.activePaths.size}/${monitorState.paths.length} disk(s)).`, 'info');
+        pollMonitor(true);
+        restartMonitorTimer();
+      });
+  } else {
+    if (slotActionState.runningAction === 'monitor') {
+      slotActionState.runningAction = null;
+    }
+    renderR510Panel();
+    renderSlotActionPanel();
+  }
+}
 
 const collapsibleSections = {
   slotActionPanel: { bodyId: 'slot-action-panel-body', toggleId: 'slot-action-panel-toggle' },
@@ -1681,6 +2122,15 @@ function isSpeedUnavailable(speed) {
   return !v || v === '?' || v === 'timeout' || v === 'no data' || v === 'error';
 }
 
+function sortSpeedRows(rows) {
+  return (Array.isArray(rows) ? rows : []).slice().sort((a, b) => {
+    const sa = Number.isInteger(Number(a && a.slot)) ? Number(a.slot) : 999;
+    const sb = Number.isInteger(Number(b && b.slot)) ? Number(b.slot) : 999;
+    if (sa !== sb) return sa - sb;
+    return String(a && a.device || '').localeCompare(String(b && b.device || ''));
+  });
+}
+
 function applySectionCollapse(sectionKey) {
   const spec = collapsibleSections[sectionKey];
   if (!spec) return;
@@ -1724,9 +2174,9 @@ function renderSpeedLastRunPanel() {
   const summaryEl = $('slot-speed-run-summary');
   const rowsEl = $('slot-speed-run-rows');
   const metaEl = $('slot-speed-run-meta');
-  const rows = run && Array.isArray(run.rows) ? run.rows : [];
+  const rows = sortSpeedRows(run && Array.isArray(run.rows) ? run.rows : []);
 
-  if (!rows.length) {
+  if (!run) {
     if (wrapEl) wrapEl.classList.add('hidden');
     if (metaEl) metaEl.textContent = '';
     if (summaryEl) summaryEl.innerHTML = '';
@@ -1736,32 +2186,52 @@ function renderSpeedLastRunPanel() {
 
   if (wrapEl) wrapEl.classList.remove('hidden');
 
-  const nTotal = rows.length;
+  const runTotal = Number(run.total);
+  const nTotal = Number.isInteger(runTotal) && runTotal > 0 ? runTotal : rows.length;
+  const nCompleted = rows.length;
   const nWithSpeed = rows.filter(r => !isSpeedUnavailable(r.speed)).length;
-  const nUnavailable = Math.max(0, nTotal - nWithSpeed);
+  const nUnavailable = Math.max(0, nCompleted - nWithSpeed);
+  const nPending = Math.max(0, nTotal - nCompleted);
   const startedAt = run.startedAt ? new Date(run.startedAt) : null;
   const finishedAt = run.finishedAt ? new Date(run.finishedAt) : null;
   const elapsed = startedAt && finishedAt
     ? Math.max(0, Math.round((finishedAt.getTime() - startedAt.getTime()) / 1000))
     : null;
 
-  metaEl.textContent = finishedAt && Number.isFinite(finishedAt.getTime())
-    ? `Finished ${finishedAt.toLocaleTimeString()}${elapsed !== null ? ` · ${fmtDuration(elapsed)}` : ''}`
-    : 'Latest speed run';
+  if (run.running) {
+    const runningElapsed = startedAt && Number.isFinite(startedAt.getTime())
+      ? Math.max(0, Math.floor((Date.now() - startedAt.getTime()) / 1000))
+      : null;
+    metaEl.textContent = `Running ${nCompleted}/${nTotal} completed${nPending > 0 ? ` · ${nPending} pending` : ''}${runningElapsed !== null ? ` · ${fmtDuration(runningElapsed)}` : ''}`;
+  } else {
+    metaEl.textContent = finishedAt && Number.isFinite(finishedAt.getTime())
+      ? `Finished ${fmtTime(finishedAt)}${elapsed !== null ? ` · ${fmtDuration(elapsed)}` : ''}`
+      : 'Latest speed run';
+  }
 
   summaryEl.innerHTML = `
     <div class="slot-monitor-chip"><span class="k">Total</span>${nTotal}</div>
+    <div class="slot-monitor-chip"><span class="k">Completed</span>${nCompleted}</div>
     <div class="slot-monitor-chip"><span class="k">With Speed</span>${nWithSpeed}</div>
     <div class="slot-monitor-chip"><span class="k">Unavailable</span>${nUnavailable}</div>
   `;
 
+  if (!rows.length) {
+    rowsEl.innerHTML = `<div class="slot-speed-run-empty">${run.running ? 'Waiting for first speed result…' : 'No speed results recorded.'}</div>`;
+    return;
+  }
+
   const bodyRows = rows.map(r => {
     const slotLabel = Number.isInteger(Number(r.slot)) ? `Slot ${r.slot}` : 'Slot ?';
     const testedAt = r.at ? new Date(r.at) : null;
-    const testedText = testedAt && Number.isFinite(testedAt.getTime()) ? testedAt.toLocaleTimeString() : '—';
+    const testedText = testedAt && Number.isFinite(testedAt.getTime()) ? fmtTime(testedAt) : '—';
+    const serialText = String(r.serial || '').trim() || '—';
+    const modelText = String(r.model || '').trim() || '—';
     return `<div class="slot-speed-run-row">
       <div>${slotLabel}</div>
       <div class="path" title="${escapeHtml(r.device || '')}">${escapeHtml(r.device || '—')}</div>
+      <div class="truncate" title="${escapeHtml(serialText)}">${escapeHtml(serialText)}</div>
+      <div class="truncate" title="${escapeHtml(modelText)}">${escapeHtml(modelText)}</div>
       <div>${speedBadge(r.speed || '?')}</div>
       <div>${escapeHtml(testedText)}</div>
     </div>`;
@@ -1771,6 +2241,8 @@ function renderSpeedLastRunPanel() {
     <div class="slot-speed-run-row head">
       <div>Slot</div>
       <div>Device</div>
+      <div>Serial</div>
+      <div>Model</div>
       <div>Speed</div>
       <div>Tested</div>
     </div>
@@ -1804,6 +2276,7 @@ function parseFormatEventFromLogLine(line, indexInWindow) {
   const state = formatStateFromLogEvent(eventMatch[1]);
   if (!state) return null;
   return {
+    event: eventMatch[1],
     serial,
     state,
     detail: eventMatch[1].replace(/^FORMAT_/, '').toLowerCase().replace(/_/g, ' '),
@@ -1812,31 +2285,102 @@ function parseFormatEventFromLogLine(line, indexInWindow) {
   };
 }
 
+function parseLogIsoToMs(isoTs) {
+  if (!isoTs) return NaN;
+  const ms = Date.parse(isoTs);
+  return Number.isFinite(ms) ? ms : NaN;
+}
+
+function computeFormatDurationSec(startedAt, completedAt) {
+  const startMs = parseLogIsoToMs(startedAt);
+  const doneMs = parseLogIsoToMs(completedAt);
+  if (!Number.isFinite(startMs) || !Number.isFinite(doneMs) || doneMs < startMs) return null;
+  return Math.max(0, Math.round((doneMs - startMs) / 1000));
+}
+
 function rebuildFormatHistoryFromLogLines(lines) {
   const map = {};
+  const runStateBySerial = {};
   const list = Array.isArray(lines) ? lines : [];
   list.forEach((line, idx) => {
     const ev = parseFormatEventFromLogLine(line, idx);
     if (!ev) return;
-    const prev = map[ev.serial];
-    if (!prev) {
-      map[ev.serial] = ev;
-      return;
+    const serial = ev.serial;
+    const ctx = runStateBySerial[serial] || {
+      runSeq: 0,
+      lastStartAt: null,
+      latest: null,
+    };
+
+    if (ev.event === 'FORMAT_STARTED') {
+      ctx.runSeq += 1;
+      ctx.lastStartAt = ev.at || null;
+      ctx.latest = {
+        event: ev.event,
+        state: 'started',
+        detail: 'started',
+        at: ev.at || null,
+        startedAt: ctx.lastStartAt,
+        completedAt: null,
+        durationSec: null,
+        timeoutConfirmed: false,
+        runSeq: ctx.runSeq,
+      };
+    } else if (ev.event === 'FORMAT_COMPLETE') {
+      const completedAt = ev.at || null;
+      ctx.latest = {
+        event: ev.event,
+        state: 'done',
+        detail: 'complete',
+        at: completedAt,
+        startedAt: ctx.lastStartAt,
+        completedAt,
+        durationSec: computeFormatDurationSec(ctx.lastStartAt, completedAt),
+        timeoutConfirmed: false,
+        runSeq: ctx.runSeq,
+      };
+    } else if (ev.event === 'FORMAT_COMPLETE_FMT_TIMEOUT') {
+      // Timeout completion should not override canonical complete (or duplicate timeout) for the same run.
+      if (
+        ctx.latest &&
+        ctx.latest.runSeq === ctx.runSeq &&
+        (ctx.latest.event === 'FORMAT_COMPLETE' || ctx.latest.event === 'FORMAT_COMPLETE_FMT_TIMEOUT')
+      ) {
+        runStateBySerial[serial] = ctx;
+        map[serial] = { ...ctx.latest };
+        return;
+      }
+      const completedAt = ev.at || null;
+      ctx.latest = {
+        event: ev.event,
+        state: 'done',
+        detail: 'complete',
+        at: completedAt,
+        startedAt: ctx.lastStartAt,
+        completedAt,
+        durationSec: computeFormatDurationSec(ctx.lastStartAt, completedAt),
+        timeoutConfirmed: true,
+        runSeq: ctx.runSeq,
+      };
+    } else if (ev.event === 'FORMAT_FAILED' || ev.event === 'FORMAT_LOST' || ev.event === 'FORMAT_START_FAILED') {
+      if (ev.event === 'FORMAT_START_FAILED') ctx.lastStartAt = null;
+      ctx.latest = {
+        event: ev.event,
+        state: 'failed',
+        detail: ev.detail,
+        at: ev.at || null,
+        startedAt: ev.event === 'FORMAT_START_FAILED' ? null : ctx.lastStartAt,
+        completedAt: null,
+        durationSec: null,
+        timeoutConfirmed: false,
+        runSeq: ctx.runSeq,
+      };
     }
-    const prevTs = prev.at ? Date.parse(prev.at) : NaN;
-    const nextTs = ev.at ? Date.parse(ev.at) : NaN;
-    if (Number.isFinite(nextTs) && Number.isFinite(prevTs)) {
-      if (nextTs >= prevTs) map[ev.serial] = ev;
-      return;
-    }
-    if (Number.isFinite(nextTs) && !Number.isFinite(prevTs)) {
-      map[ev.serial] = ev;
-      return;
-    }
-    if (!Number.isFinite(nextTs) && !Number.isFinite(prevTs) && ev.rank >= prev.rank) {
-      map[ev.serial] = ev;
-    }
+
+    runStateBySerial[serial] = ctx;
+    if (ctx.latest) map[serial] = { ...ctx.latest };
   });
+
   formatLogBySerial = map;
 }
 
@@ -1879,7 +2423,7 @@ function parseLogPrefix(line) {
   const ms = m[2] ? m[2].padEnd(3, '0').slice(0, 3) : '000';
   const tsIso = `${m[1].replace(' ', 'T')}.${ms}`;
   const parsed = new Date(tsIso);
-  const tsDisplay = Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : m[1];
+  const tsDisplay = Number.isFinite(parsed.getTime()) ? fmtTimestamp(parsed) : m[1];
   return { tsIso, tsDisplay, level: m[3], message: m[4] };
 }
 
@@ -2009,6 +2553,7 @@ function parseLogRow(line, idx) {
   }
 
   const timestampMs = pref.tsIso ? Date.parse(pref.tsIso) : NaN;
+  const timestampSecondKey = pref.tsIso ? pref.tsIso.slice(0, 19) : '';
   return {
     id: String(Number(idx) || 0),
     timeDisplay: pref.tsDisplay,
@@ -2020,6 +2565,7 @@ function parseLogRow(line, idx) {
     serial,
     summary,
     raw,
+    timestampSecondKey,
     timestampMs: Number.isFinite(timestampMs) ? timestampMs : NaN,
     sourceIndex: Number(idx) || 0,
   };
@@ -2114,6 +2660,187 @@ function logsBadgeHtml(text, cls) {
   return `<span class="badge ${cls}">${escapeHtml(text || '—')}</span>`;
 }
 
+function canGroupLogRows(a, b) {
+  if (!a || !b) return false;
+  if (a.event === 'RAW' || b.event === 'RAW') return false;
+  if (!a.timestampSecondKey || !b.timestampSecondKey) return false;
+  return (
+    a.event === b.event &&
+    a.level === b.level &&
+    a.timestampSecondKey === b.timestampSecondKey
+  );
+}
+
+function buildGroupedLogsRows(rowsFiltered) {
+  const rows = Array.isArray(rowsFiltered) ? rowsFiltered : [];
+  const grouped = [];
+  let idx = 0;
+
+  while (idx < rows.length) {
+    const head = rows[idx];
+    let end = idx + 1;
+    while (end < rows.length && canGroupLogRows(head, rows[end])) {
+      end += 1;
+    }
+    const chunk = rows.slice(idx, end);
+    if (chunk.length >= 2) {
+      const key = `group:${head.event}:${head.level}:${head.timestampSecondKey}:${head.id}:${chunk.length}`;
+      grouped.push({ kind: 'group', key, rows: chunk });
+    } else {
+      grouped.push({ kind: 'row', key: `row:${head.id}`, row: head });
+    }
+    idx = end;
+  }
+
+  return grouped;
+}
+
+function groupUniqueFieldValues(rows, fieldName) {
+  return Array.from(new Set(
+    (rows || [])
+      .map(row => String(row[fieldName] || '').trim())
+      .filter(Boolean)
+  ));
+}
+
+function formatGroupedList(values, fallbackLabel, maxItems) {
+  const unique = Array.isArray(values) ? values : [];
+  if (!unique.length) return `unknown ${fallbackLabel}`;
+  if (unique.length <= maxItems) return unique.join(', ');
+  const shown = unique.slice(0, maxItems);
+  const hiddenCount = unique.length - shown.length;
+  return `${shown.join(', ')}, +${hiddenCount} more`;
+}
+
+function groupedEventLabel(event) {
+  const key = String(event || '').trim().toUpperCase();
+  if (key === 'SPEEDTEST') return 'Speed test';
+  if (key === 'HEALTH') return 'Health';
+  if (key === 'FORMAT_STARTED') return 'Format started';
+  if (key === 'FORMAT_COMPLETE') return 'Format complete';
+  if (key === 'FORMAT_COMPLETE_FMT_TIMEOUT') return 'Format complete timeout';
+  if (key === 'FORMAT_FAILED') return 'Format failed';
+  if (key === 'FORMAT_START_FAILED') return 'Format start failed';
+  if (key === 'FORMAT_ABORTED') return 'Format aborted';
+  if (key === 'MISSING_SLOTS') return 'Missing slots';
+  if (!key) return 'Log';
+  return key;
+}
+
+function groupedSummaryTokens(rows, event) {
+  const tokens = [];
+  const eventKey = String(event || '').trim().toUpperCase();
+
+  (rows || []).forEach(row => {
+    const pref = parseLogPrefix(row.raw || '');
+    const parsed = parseKvMessage(pref.message || '');
+
+    if (eventKey === 'SPEEDTEST') {
+      const groups = parseSpeedReadGroups(pref.message || '');
+      if (groups.length) {
+        groups.forEach(g => {
+          const serial = String(g.serial || '').trim();
+          const dev = String(g.dev || '').trim();
+          const slot = String(g.slot || '').trim();
+          const read = String(g.read || '').trim() || '?';
+          const id = serial && serial !== '?'
+            ? serial
+            : (dev || (slot ? `bay ${slot}` : 'unknown disk'));
+          tokens.push(`${id} ${read}`.trim());
+        });
+        return;
+      }
+    }
+
+    if (eventKey === 'HEALTH') {
+      const serial = String(parsed.fields.serial || row.serial || '').trim() || 'unknown serial';
+      const health = String(parsed.fields.health || '').trim();
+      tokens.push(health ? `${serial} ${health}` : serial);
+      return;
+    }
+
+    const serial = String(parsed.fields.serial || row.serial || '').trim();
+    if (serial) tokens.push(serial);
+  });
+
+  const seen = new Set();
+  const unique = [];
+  tokens.forEach(token => {
+    const value = String(token || '').trim();
+    if (!value || seen.has(value)) return;
+    seen.add(value);
+    unique.push(value);
+  });
+  return unique;
+}
+
+function buildGroupedSummary(rows, event) {
+  const items = groupedSummaryTokens(rows, event);
+  if (!items.length) return `${(rows || []).length} ${event || 'LOG'} entries`;
+  return `${groupedEventLabel(event)}: ${items.join('; ')}`;
+}
+
+function renderSingleLogRow(row) {
+  const rowId = `row:${row.id}`;
+  const expanded = logsExpandedRaw.has(rowId);
+  const selected = logsSelectedRowIds.has(rowId) ? ' checked' : '';
+  const serialText = row.serial ? escapeHtml(row.serial) : '<span class="dim">—</span>';
+  const devText = row.device ? escapeHtml(row.device) : '<span class="dim">—</span>';
+  const rawToggle = expanded ? 'Hide' : 'Show';
+  const main = `<tr>
+      <td><input type="checkbox" class="logs-row-select" data-row-id="${rowId}" aria-label="Select log row"${selected}></td>
+      <td>${escapeHtml(row.timeDisplay || '—')}</td>
+      <td>${logsBadgeHtml(row.level || '—', logsLevelBadgeClass(row.level))}</td>
+      <td>${logsBadgeHtml(row.event || 'RAW', logsEventBadgeClass(row.event))}</td>
+      <td>${serialText}</td>
+      <td class="logs-device">${devText}</td>
+      <td><div class="logs-summary">${escapeHtml(row.summary || '')}</div></td>
+      <td><button type="button" class="btn logs-raw-btn" data-row-id="${rowId}">${rawToggle}</button></td>
+    </tr>`;
+  if (!expanded) return main;
+  return `${main}<tr><td colspan="8"><div class="logs-raw-line">${escapeHtml(row.raw || '')}</div></td></tr>`;
+}
+
+function renderGroupedLogRows(group) {
+  const rows = group.rows || [];
+  if (!rows.length) return '';
+  const head = rows[0];
+  const groupId = group.key;
+  const expanded = logsExpandedRaw.has(groupId);
+  const selected = logsSelectedRowIds.has(groupId) ? ' checked' : '';
+  const serialValues = groupUniqueFieldValues(rows, 'serial');
+  const deviceValues = groupUniqueFieldValues(rows, 'device');
+  const groupedCount = serialValues.length || deviceValues.length || rows.length;
+  const groupedSerialLabel = `${groupedCount} device${groupedCount === 1 ? '' : 's'}`;
+  const deviceLabel = formatGroupedList(deviceValues, 'device', 2);
+  const summary = buildGroupedSummary(rows, head.event);
+  const deviceMeta = deviceValues.length
+    ? `${deviceValues.length} device(s)`
+    : 'unknown device(s)';
+  const meta = `Grouped by event + level + second | ${deviceMeta}`;
+  const toggleLabel = expanded ? 'Hide' : `Show ${rows.length}`;
+  const deviceTitle = deviceValues.length ? escapeHtml(deviceValues.join(', ')) : '';
+  const main = `<tr>
+      <td><input type="checkbox" class="logs-row-select" data-row-id="${groupId}" aria-label="Select grouped log row"${selected}></td>
+      <td>${escapeHtml(head.timeDisplay || '—')}</td>
+      <td>${logsBadgeHtml(head.level || '—', logsLevelBadgeClass(head.level))}</td>
+      <td>${logsBadgeHtml(head.event || 'RAW', logsEventBadgeClass(head.event))}</td>
+      <td>${escapeHtml(groupedSerialLabel)}</td>
+      <td class="logs-device" title="${deviceTitle}">${escapeHtml(deviceLabel)}</td>
+      <td><div class="logs-summary">${escapeHtml(summary)}<div class="logs-summary-meta">${escapeHtml(meta)}</div></div></td>
+      <td><button type="button" class="btn logs-raw-btn" data-row-id="${groupId}">${toggleLabel}</button></td>
+    </tr>`;
+  if (!expanded) return main;
+
+  const detail = rows.map((row, i) => {
+    const time = row.timeDisplay || '—';
+    const line = row.raw || '';
+    return `${i + 1}. [${time}] ${line}`;
+  }).join('\n');
+
+  return `${main}<tr><td colspan="8"><div class="logs-raw-line">${escapeHtml(detail)}</div></td></tr>`;
+}
+
 function renderLogsTable(rowsFiltered, totalCount) {
   const wrap = $('logs-table-wrap');
   const body = $('logs-table-body');
@@ -2124,32 +2851,37 @@ function renderLogsTable(rowsFiltered, totalCount) {
   if (!rows.length) {
     wrap.classList.add('hidden');
     body.innerHTML = '';
+    logsRowLinesById = new Map();
+    logsSelectedRowIds = new Set();
     empty.textContent = totalCount > 0 ? 'No log lines match current filters.' : 'No log lines found.';
     empty.classList.remove('hidden');
+    syncLogsSelectionUI();
     return;
   }
 
   wrap.classList.remove('hidden');
   empty.classList.add('hidden');
 
-  body.innerHTML = rows.map(row => {
-    const rowId = row.id;
-    const expanded = logsExpandedRaw.has(rowId);
-    const serialText = row.serial ? escapeHtml(row.serial) : '<span class="dim">—</span>';
-    const devText = row.device ? escapeHtml(row.device) : '<span class="dim">—</span>';
-    const rawToggle = expanded ? 'Hide' : 'Show';
-    const main = `<tr>
-      <td>${escapeHtml(row.timeDisplay || '—')}</td>
-      <td>${logsBadgeHtml(row.level || '—', logsLevelBadgeClass(row.level))}</td>
-      <td>${logsBadgeHtml(row.event || 'RAW', logsEventBadgeClass(row.event))}</td>
-      <td>${serialText}</td>
-      <td class="logs-device">${devText}</td>
-      <td><div class="logs-summary">${escapeHtml(row.summary || '')}</div></td>
-      <td><button type="button" class="btn logs-raw-btn" data-row-id="${rowId}">${rawToggle}</button></td>
-    </tr>`;
-    if (!expanded) return main;
-    return `${main}<tr><td colspan="7"><div class="logs-raw-line">${escapeHtml(row.raw || '')}</div></td></tr>`;
+  const grouped = buildGroupedLogsRows(rows);
+  const nextMap = new Map();
+  grouped.forEach(item => {
+    if (item.kind === 'group') {
+      const lines = (item.rows || []).map(r => String(r.raw || ''));
+      nextMap.set(item.key, lines);
+      return;
+    }
+    const rowId = `row:${item.row.id}`;
+    nextMap.set(rowId, [String(item.row.raw || '')]);
+  });
+  logsRowLinesById = nextMap;
+  const visibleIds = new Set(nextMap.keys());
+  logsSelectedRowIds = new Set(Array.from(logsSelectedRowIds).filter(rowId => visibleIds.has(rowId)));
+
+  body.innerHTML = grouped.map(item => {
+    if (item.kind === 'group') return renderGroupedLogRows(item);
+    return renderSingleLogRow(item.row);
   }).join('');
+  syncLogsSelectionUI();
 }
 
 function rerenderLogsFromState(updateStatus = true) {
@@ -2157,9 +2889,10 @@ function rerenderLogsFromState(updateStatus = true) {
   const total = Number.isFinite(Number(logsTotalCount)) ? Number(logsTotalCount) : logsRows.length;
   renderLogsTable(filtered, total);
   if (updateStatus) {
+    const olderHint = logsHasMore ? ' Click "Load Older Logs" for more.' : '';
     setStatus(
       'logs-status',
-      `Showing ${filtered.length} of ${total} line(s) (last ${LOGS_LINE_LIMIT}).`,
+      `Showing ${filtered.length} of ${total} loaded line(s).${olderHint}`,
       filtered.length ? '' : 'info'
     );
   }
@@ -2262,6 +2995,114 @@ function setSlotActionStatus(msg, cls) {
   setStatus('slot-action-status', msg, cls);
 }
 
+function getSlotActionDisableState(summary) {
+  const info = summary || selectionSummary();
+  const busy = !!slotActionState.runningAction && slotActionState.runningAction !== 'monitor';
+  const monitorActive = monitorState.active;
+  const blockedBySharedState = info.actionable === 0 || busy || monitorActive;
+  return {
+    busy,
+    monitorActive,
+    health: blockedBySharedState,
+    zeroed: blockedBySharedState,
+    speed: blockedBySharedState,
+    format: blockedBySharedState,
+    monitor: info.actionable === 0 || busy,
+  };
+}
+
+function positionSlotContextMenu(x, y) {
+  const menu = $('slot-context-menu');
+  if (!menu) return;
+  const pad = 8;
+  const rect = menu.getBoundingClientRect();
+  const maxLeft = Math.max(pad, window.innerWidth - rect.width - pad);
+  const maxTop = Math.max(pad, window.innerHeight - rect.height - pad);
+  const left = Math.max(pad, Math.min(Number(x) || 0, maxLeft));
+  const top = Math.max(pad, Math.min(Number(y) || 0, maxTop));
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
+  slotContextMenuState.x = left;
+  slotContextMenuState.y = top;
+}
+
+function updateSlotContextMenuUi() {
+  const menu = $('slot-context-menu');
+  if (!menu) return;
+
+  const summary = selectionSummary();
+  const slotNum = Number(slotContextMenuState.slot);
+  const slotText = Number.isInteger(slotNum) ? `Slot ${slotNum}` : 'Slot';
+  const sourceText = slotContextMenuState.source === 'table' ? 'table row' : 'bay';
+  $('slot-context-menu-head').textContent = `${slotText} Actions`;
+  $('slot-context-menu-meta').textContent = `${summary.total} selected · ${summary.actionable} actionable · ${sourceText}`;
+
+  const disabledByAction = getSlotActionDisableState(summary);
+  menu.querySelectorAll('.slot-context-menu-item[data-action]').forEach(btn => {
+    const action = String(btn.dataset.action || '').toLowerCase();
+    btn.disabled = !!disabledByAction[action];
+  });
+}
+
+function closeSlotContextMenu(_reason) {
+  const menu = $('slot-context-menu');
+  if (!menu) return;
+  slotContextMenuState.open = false;
+  slotContextMenuState.slot = null;
+  slotContextMenuState.source = '';
+  slotContextMenuState.x = 0;
+  slotContextMenuState.y = 0;
+  menu.classList.remove('open');
+  menu.setAttribute('aria-hidden', 'true');
+  menu.style.left = '';
+  menu.style.top = '';
+}
+
+function openSlotContextMenu(event, slot, source) {
+  if (!event || activeMainTab !== TAB_SLOTS || confirmDialogOpen) return;
+  const slotNum = Number(slot);
+  if (!Number.isInteger(slotNum)) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (!selectedSlots.has(slotNum)) {
+    selectedSlots.add(slotNum);
+  }
+  primarySlot = slotNum;
+  ensurePrimarySlot();
+  renderR510Panel();
+  renderSlotActionPanel();
+
+  slotContextMenuState.open = true;
+  slotContextMenuState.slot = slotNum;
+  slotContextMenuState.source = String(source || '');
+  slotContextMenuState.x = Number(event.clientX) || 0;
+  slotContextMenuState.y = Number(event.clientY) || 0;
+
+  const menu = $('slot-context-menu');
+  if (!menu) return;
+  menu.classList.add('open');
+  menu.setAttribute('aria-hidden', 'false');
+  updateSlotContextMenuUi();
+  positionSlotContextMenu(slotContextMenuState.x, slotContextMenuState.y);
+}
+
+function runSlotActionFromMenu(action) {
+  const actionName = String(action || '').toLowerCase();
+  if (!SLOT_CONTEXT_ACTIONS.includes(actionName)) return;
+
+  const disabledByAction = getSlotActionDisableState(selectionSummary());
+  if (disabledByAction[actionName]) return;
+  closeSlotContextMenu('action');
+
+  if (actionName === 'health') runHealthEnrichment(true);
+  else if (actionName === 'zeroed') runZeroedForSelection();
+  else if (actionName === 'speed') runSpeedForSelection();
+  else if (actionName === 'format') runFormatForSelection();
+  else if (actionName === 'monitor') startMonitorForSelection();
+}
+
 function isBlockingActionRunning() {
   return globalActionBusy || (!!slotActionState.runningAction && slotActionState.runningAction !== 'monitor');
 }
@@ -2272,6 +3113,28 @@ function isTypingContext(event) {
   const tag = String(t.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
   if (t.isContentEditable) return true;
+  return false;
+}
+
+function isNodeInsideContainer(node, container) {
+  if (!node || !container) return false;
+  const host = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+  return !!(host && container.contains(host));
+}
+
+function hasNonEmptyTextSelectionIn(container) {
+  if (!container || typeof window.getSelection !== 'function') return false;
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return false;
+  if (!String(selection.toString() || '').trim()) return false;
+  if (isNodeInsideContainer(selection.anchorNode, container)) return true;
+  if (isNodeInsideContainer(selection.focusNode, container)) return true;
+
+  for (let i = 0; i < selection.rangeCount; i += 1) {
+    const range = selection.getRangeAt(i);
+    if (!range) continue;
+    if (isNodeInsideContainer(range.commonAncestorContainer, container)) return true;
+  }
   return false;
 }
 
@@ -2294,6 +3157,12 @@ function toggleSelectAllViaHotkey() {
 
 function handleGlobalHotkeys(event) {
   if (!event || event.defaultPrevented) return;
+  if (slotContextMenuState.open && event.key === 'Escape') {
+    event.preventDefault();
+    event.stopPropagation();
+    closeSlotContextMenu('escape');
+    return;
+  }
   if (activeMainTab !== TAB_SLOTS) return;
   if (event.ctrlKey || event.metaKey || event.altKey) return;
   if (isTypingContext(event)) return;
@@ -2315,28 +3184,74 @@ function handleGlobalHotkeys(event) {
   }
 }
 
-function loadLogs(force) {
-  const shouldForce = !!force;
+function logsApiUrl(offset) {
+  const params = new URLSearchParams({
+    limit: String(LOGS_PAGE_SIZE),
+    offset: String(Math.max(0, Number(offset) || 0)),
+  });
+  return `/api/logs?${params.toString()}`;
+}
+
+function syncLogsButtons() {
+  const refreshBtn = $('logs-refresh-btn');
+  const loadOlderBtn = $('logs-load-older-btn');
+  const deleteBtn = $('logs-delete-selected-btn');
+  const busy = logsLoading || logsDeleting;
+  if (refreshBtn) refreshBtn.disabled = busy;
+  if (loadOlderBtn) loadOlderBtn.disabled = busy || !logsHasMore;
+  if (deleteBtn) deleteBtn.disabled = busy || logsSelectedRowIds.size === 0;
+}
+
+function syncLogsSelectionUI() {
+  const selectAll = $('logs-select-all');
+  const rowIds = Array.from(logsRowLinesById.keys());
+  const selectedVisible = rowIds.filter(rowId => logsSelectedRowIds.has(rowId)).length;
+
+  if (selectAll) {
+    selectAll.disabled = logsLoading || logsDeleting || rowIds.length === 0;
+    selectAll.checked = rowIds.length > 0 && selectedVisible === rowIds.length;
+    selectAll.indeterminate = selectedVisible > 0 && selectedVisible < rowIds.length;
+  }
+
+  syncLogsButtons();
+}
+
+function fetchLogsPage(offset, replace, loadingLabel) {
   if (logsLoading) return;
-  if (!shouldForce && logsLoadedOnce) return;
-
   logsLoading = true;
-  $('logs-refresh-btn').disabled = true;
-  setStatus('logs-status', '<span class="spin"></span> Loading logs...', 'info');
+  syncLogsButtons();
+  setStatus('logs-status', `<span class="spin"></span> ${loadingLabel}`, 'info');
 
-  getJSON('/api/logs')
+  getJSON(logsApiUrl(offset))
     .then(data => {
       const source = data.source || '—';
       const lines = Array.isArray(data.lines) ? data.lines : [];
-      const lineCount = Number.isFinite(Number(data.line_count)) ? Number(data.line_count) : lines.length;
-      rebuildFormatHistoryFromLogLines(lines);
+      const hasMore = !!data.has_more;
+      const fallbackNextOffset = Math.max(0, Number(offset) || 0) + lines.length;
+      const hasNumericNextOffset = data.next_offset !== null && data.next_offset !== undefined;
+      const parsedNextOffset = hasNumericNextOffset ? Number(data.next_offset) : NaN;
+      const nextOffset = Number.isFinite(parsedNextOffset) ? parsedNextOffset : fallbackNextOffset;
+
+      if (replace) {
+        logsRawLines = lines.slice();
+        logsSelectedRowIds = new Set();
+        logsRowLinesById = new Map();
+      } else {
+        logsRawLines = lines.concat(logsRawLines);
+      }
+
+      logsOffset = nextOffset;
+      logsHasMore = hasMore;
+      logsTotalCount = logsRawLines.length;
+      logsRows = buildLogsRows(logsRawLines);
+      logsExpandedRaw = new Set();
+
+      rebuildFormatHistoryFromLogLines(logsRawLines);
       renderSlotActionPanel();
 
       $('logs-source').textContent = `Source: ${source}`;
       $('logs-fetched-at').textContent = fmtTimestamp(data.fetched_at);
-      logsTotalCount = lineCount;
-      logsRows = buildLogsRows(lines);
-      logsExpandedRaw = new Set();
+
       refreshLogsFiltersFromInputs();
       rerenderLogsFromState(true);
       logsLoadedOnce = true;
@@ -2344,21 +3259,92 @@ function loadLogs(force) {
     .catch(err => {
       const data = err && err.data ? err.data : {};
       if (data.source) $('logs-source').textContent = `Source: ${data.source}`;
-      $('logs-fetched-at').textContent = '—';
-      logsTotalCount = 0;
-      logsRows = [];
-      logsExpandedRaw = new Set();
-      renderLogsTable([], 0);
+      if (replace) {
+        $('logs-fetched-at').textContent = '—';
+        logsTotalCount = 0;
+        logsRows = [];
+        logsRawLines = [];
+        logsOffset = 0;
+        logsHasMore = false;
+        logsExpandedRaw = new Set();
+        logsSelectedRowIds = new Set();
+        logsRowLinesById = new Map();
+        renderLogsTable([], 0);
+      }
       setStatus('logs-status', `✗ ${err.message}`, 'error');
     })
     .finally(() => {
       logsLoading = false;
-      $('logs-refresh-btn').disabled = false;
+      syncLogsButtons();
+    });
+}
+
+function loadLogs(force) {
+  const shouldForce = !!force;
+  if (logsLoading) return;
+  if (!shouldForce && logsLoadedOnce) return;
+  fetchLogsPage(0, true, 'Loading logs...');
+}
+
+function loadOlderLogs() {
+  if (logsLoading || !logsHasMore) return;
+  fetchLogsPage(logsOffset, false, 'Loading older logs...');
+}
+
+async function deleteSelectedLogs() {
+  if (logsLoading || logsDeleting) return;
+
+  const selectedIds = Array.from(logsSelectedRowIds).filter(rowId => logsRowLinesById.has(rowId));
+  if (!selectedIds.length) {
+    setStatus('logs-status', 'Select at least one log row to delete.', 'info');
+    syncLogsSelectionUI();
+    return;
+  }
+
+  const lines = [];
+  selectedIds.forEach(rowId => {
+    const rowLines = logsRowLinesById.get(rowId) || [];
+    rowLines.forEach(line => lines.push(line));
+  });
+  if (!lines.length) {
+    setStatus('logs-status', 'No deletable log lines found in current selection.', 'error');
+    syncLogsSelectionUI();
+    return;
+  }
+
+  const confirmed = await showConfirmDialog(
+    'Delete Selected Logs',
+    `Delete ${selectedIds.length} selected row(s) (${lines.length} log line(s)) from the log file?`,
+    '',
+  );
+  if (!confirmed) return;
+
+  logsDeleting = true;
+  syncLogsButtons();
+  setStatus('logs-status', '<span class="spin"></span> Deleting selected logs...', 'info');
+
+  postJSON('/api/logs/delete', { lines })
+    .then(data => {
+      if (data.source) $('logs-source').textContent = `Source: ${data.source}`;
+      const removed = Number(data.removed_count || 0);
+      logsSelectedRowIds = new Set();
+      logsRowLinesById = new Map();
+      showToast(`Deleted ${removed} log line(s).`, removed > 0 ? 'ok' : '', 3200);
+      loadLogs(true);
+    })
+    .catch(err => {
+      const msg = friendlyApiError(err, 'Failed to delete selected logs.');
+      setStatus('logs-status', `✗ ${msg}`, 'error');
+    })
+    .finally(() => {
+      logsDeleting = false;
+      syncLogsSelectionUI();
     });
 }
 
 function setMainTab(tabName) {
   const showSlots = tabName === TAB_SLOTS;
+  closeSlotContextMenu('tab-switch');
   activeMainTab = showSlots ? TAB_SLOTS : TAB_LOGS;
 
   $('section-slots').classList.toggle('hidden', !showSlots);
@@ -2442,6 +3428,7 @@ function runTableActionForSlot(slot, action) {
   selectSingleSlot(slot);
 
   if (action === 'health') runHealthEnrichment(true);
+  else if (action === 'zeroed') runZeroedForSelection();
   else if (action === 'speed') runSpeedForSelection();
   else if (action === 'format') runFormatForSelection();
   else if (action === 'monitor') startMonitorForSelection();
@@ -2456,17 +3443,33 @@ function renderSlotsTable() {
     const isSelected = selectedSlots.has(slot);
     const actionable = s.status === 'PRESENT' && !!(d && d.path);
     const disableHealth = !actionable || busy || monitorActive;
+    const disableZeroed = !actionable || busy || monitorActive;
     const disableSpeed = !actionable || busy || monitorActive;
     const disableFormat = !actionable || busy || monitorActive;
     const disableMonitor = !actionable || busy;
     const actionsHtml = actionable
       ? `<div class="slots-row-actions">
           <button type="button" class="btn slots-row-action-btn" data-slot="${slot}" data-action="health"${disableHealth ? ' disabled' : ''}>Health</button>
+          <button type="button" class="btn slots-row-action-btn" data-slot="${slot}" data-action="zeroed"${disableZeroed ? ' disabled' : ''}>Zeroed</button>
           <button type="button" class="btn slots-row-action-btn" data-slot="${slot}" data-action="speed"${disableSpeed ? ' disabled' : ''}>Speed</button>
           <button type="button" class="btn danger slots-row-action-btn" data-slot="${slot}" data-action="format"${disableFormat ? ' disabled' : ''}>Format</button>
           <button type="button" class="btn primary slots-row-action-btn" data-slot="${slot}" data-action="monitor"${disableMonitor ? ' disabled' : ''}>Monitor</button>
         </div>`
       : '<span class="dim">—</span>';
+    const deviceHtml = d && d.path
+      ? `<span class="dim copyable-text" data-copyable="true">${escapeHtml(d.path)}</span>`
+      : '<span class="dim">—</span>';
+    const serialHtml = d
+      ? (d.serial
+        ? `<span class="copyable-text" data-copyable="true">${escapeHtml(d.serial)}</span>`
+        : '<span class="dim">N/A</span>')
+      : '<span class="dim">—</span>';
+    const modelHtml = d
+      ? (d.model
+        ? `<span class="copyable-text" data-copyable="true">${escapeHtml(d.model)}</span>`
+        : '<span class="dim">unknown</span>')
+      : '<span class="dim">—</span>';
+
     return `<tr data-slot="${slot}" class="${isSelected ? 'slots-row-selected' : ''}">
       <td class="slots-table-select-col">
         <input type="checkbox" class="slots-row-select" data-slot="${slot}" ${isSelected ? 'checked' : ''} aria-label="Select slot ${slot}">
@@ -2476,9 +3479,9 @@ function renderSlotsTable() {
       <td>${d ? healthBadge(d.health) : '<span class="dim">—</span>'}</td>
       <td>${d ? fmtBadge(d.fmt_status, d.zeroed) : '<span class="dim">—</span>'}</td>
       <td>${d ? zeroedBadge(d.zeroed) : '<span class="dim">—</span>'}</td>
-      <td>${d ? `<span class="dim">${escapeHtml(d.path)}</span>` : '<span class="dim">—</span>'}</td>
-      <td>${d ? (escapeHtml(d.serial) || '<span class="dim">N/A</span>') : '<span class="dim">—</span>'}</td>
-      <td>${d ? (escapeHtml(d.model) || '<span class="dim">unknown</span>') : '<span class="dim">—</span>'}</td>
+      <td>${deviceHtml}</td>
+      <td>${serialHtml}</td>
+      <td>${modelHtml}</td>
       <td>${actionsHtml}</td>
     </tr>`;
   }).join('');
@@ -2504,8 +3507,9 @@ function renderR510Panel() {
     const isMonitoring = !!(devPath && monitorState.activePaths.has(devPath));
     const latest = devPath ? monitorState.latestByPath[devPath] : null;
     const monitorStatus = String((latest && latest.status) || (isMonitoring ? 'waiting' : ''));
-    const showProgress = isMonitoring && (monitorStatus === 'waiting' || monitorStatus === 'started' || monitorStatus === 'formatting');
     const isPresent = s.status === 'PRESENT';
+    const showProgress = isMonitoring && (monitorStatus === 'waiting' || monitorStatus === 'started' || monitorStatus === 'formatting');
+    const showDone = isPresent && !isMonitoring && (monitorStatus === 'done' || monitorStatus === 'done_nostart');
     const statusText = isPresent ? '' : 'MISSING';
     const serialRaw = isPresent && s.device ? String(s.device.serial || '').trim() : '';
     const serialText = isPresent ? `SN: ${serialRaw || 'N/A'}` : '';
@@ -2527,7 +3531,9 @@ function renderR510Panel() {
           <span class="prog-wrap"><span class="prog-fill${fillCls ? ' ' + fillCls : ''}${fillExtra}" style="width:${pct}%"></span></span>
           <span class="bay-progress-pct">${pctText}</span>
         </span>`
-      : '';
+      : (showDone
+        ? '<span class="bay-progress-row done"><span class="bay-progress-state">Done</span></span>'
+        : '');
     const titleText = [
       `Slot ${s.slot}${isSelected ? ' selected' : ''}`,
       isPresent ? (serialRaw ? `Serial: ${serialRaw}` : 'Serial: N/A') : '',
@@ -2538,7 +3544,7 @@ function renderR510Panel() {
       <span class="bay-main-row">
         <span class="bay-led" aria-hidden="true"></span>
         <span class="bay-slot-label">Slot ${s.slot}</span>
-        ${serialText ? `<span class="bay-serial" title="${escapeHtml(serialText)}">${escapeHtml(serialText)}</span>` : ''}
+        ${serialText ? `<span class="bay-serial copyable-text" data-copyable="true" title="${escapeHtml(serialText)}">${escapeHtml(serialText)}</span>` : ''}
         ${statusText ? `<span class="bay-state">${statusText}</span>` : ''}
         ${healthText ? `<span class="bay-health" style="color:${hColor}">${escapeHtml(healthText)}</span>` : ''}
         ${sizeText ? `<span class="bay-size">${escapeHtml(sizeText)}</span>` : ''}
@@ -2548,6 +3554,37 @@ function renderR510Panel() {
   }).join('');
 }
 
+function formatSlotFormatMeta(record, fromLogs) {
+  const item = record && typeof record === 'object' ? record : null;
+  if (!item) return '';
+
+  const detail = String(item.detail || item.state || '').trim();
+  const at = item.at || null;
+  const completedAt = item.completedAt || at;
+  const durationSec = Number(item.durationSec);
+
+  if (item.state === 'done') {
+    const doneParts = [];
+    if (completedAt) doneParts.push(`formatted ${fmtTimestamp(completedAt)}`);
+    if (Number.isFinite(durationSec) && durationSec > 0) {
+      doneParts.push(`took ${fmtDuration(durationSec)}`);
+    }
+    if (item.timeoutConfirmed) doneParts.push('timeout-confirmed');
+    if (doneParts.length) return fromLogs ? `From logs: ${doneParts.join(' · ')}` : doneParts.join(' · ');
+  }
+
+  if (fromLogs) {
+    if (detail && at) return `From logs: ${detail} · ${fmtTimestamp(at)}`;
+    if (detail) return `From logs: ${detail}`;
+    if (at) return `From logs: ${fmtTimestamp(at)}`;
+    return 'From logs: unknown';
+  }
+  if (detail && at) return `${detail} · ${fmtTime(at)}`;
+  if (detail) return detail;
+  if (at) return fmtTime(at);
+  return '';
+}
+
 function renderSlotActionResults(slotObj) {
   const d = slotObj && slotObj.device;
   $('slot-health-result').innerHTML = d ? healthBadge(d.health) : '<span class="dim">—</span>';
@@ -2555,27 +3592,25 @@ function renderSlotActionResults(slotObj) {
   const hRes = slotObj ? slotActionState.healthResults[slotObj.slot] : null;
   if (hRes) {
     const warn = typeof hRes.rc === 'number' && hRes.rc !== 0 ? ` (exit ${hRes.rc})` : '';
-    $('slot-health-meta').textContent = `Scanned ${hRes.at.toLocaleTimeString()} in ${fmtDuration(hRes.elapsed)}${warn}`;
+    $('slot-health-meta').textContent = `Scanned ${fmtTime(hRes.at)} in ${fmtDuration(hRes.elapsed)}${warn}`;
   } else if (d && d.path && healthLoadedAt && healthByPath[d.path] !== undefined) {
-    $('slot-health-meta').textContent = `Shown at ${healthLoadedAt.toLocaleTimeString()}`;
+    $('slot-health-meta').textContent = `Shown at ${fmtTime(healthLoadedAt)}`;
   } else {
     $('slot-health-meta').textContent = '';
   }
 
   const sRes = slotObj ? slotActionState.speedResultsBySlot[slotObj.slot] : null;
   $('slot-speed-result').innerHTML = sRes ? speedBadge(sRes.speed) : '<span class="dim">Not tested</span>';
-  $('slot-speed-meta').textContent = sRes ? `Tested ${sRes.at.toLocaleTimeString()}` : '';
+  $('slot-speed-meta').textContent = sRes ? `Tested ${fmtTime(sRes.at)}` : '';
 
   const fRes = slotObj ? slotActionState.formatResults[slotObj.slot] : null;
   const logFmt = d ? getFormatHistoryForSerial(d.serial) : null;
   if (fRes) {
     $('slot-format-result').innerHTML = formatStateBadge(fRes.state);
-    $('slot-format-meta').textContent = `${fRes.detail || fRes.state} · ${fRes.at.toLocaleTimeString()}`;
+    $('slot-format-meta').textContent = formatSlotFormatMeta(fRes, false);
   } else if (logFmt) {
     $('slot-format-result').innerHTML = formatStateBadge(logFmt.state);
-    $('slot-format-meta').textContent = logFmt.at
-      ? `From logs: ${logFmt.detail} · ${fmtTimestamp(logFmt.at)}`
-      : `From logs: ${logFmt.detail}`;
+    $('slot-format-meta').textContent = formatSlotFormatMeta(logFmt, true);
   } else {
     $('slot-format-result').innerHTML = '<span class="dim">Not started</span>';
     $('slot-format-meta').textContent = '';
@@ -2726,14 +3761,16 @@ function renderMonitorState() {
 
 function updateActionButtons() {
   const summary = selectionSummary();
-  const busy = !!slotActionState.runningAction && slotActionState.runningAction !== 'monitor';
-  const monitorActive = monitorState.active;
+  const disabledByAction = getSlotActionDisableState(summary);
+  const busy = disabledByAction.busy;
+  const monitorActive = disabledByAction.monitorActive;
   const hasSlots = slotsData.length > 0;
 
-  $('slot-run-health-btn').disabled = summary.actionable === 0 || busy || monitorActive;
-  $('slot-run-speed-btn').disabled = summary.actionable === 0 || busy || monitorActive;
-  $('slot-run-format-btn').disabled = summary.actionable === 0 || busy || monitorActive;
-  $('slot-run-monitor-btn').disabled = summary.actionable === 0 || busy;
+  $('slot-run-health-btn').disabled = disabledByAction.health;
+  $('slot-run-zeroed-btn').disabled = disabledByAction.zeroed;
+  $('slot-run-speed-btn').disabled = disabledByAction.speed;
+  $('slot-run-format-btn').disabled = disabledByAction.format;
+  $('slot-run-monitor-btn').disabled = disabledByAction.monitor;
   $('slot-clear-selection-btn').disabled = summary.total === 0;
   $('slot-select-present-btn').disabled = !hasSlots;
   $('slot-select-invert-btn').disabled = !hasSlots;
@@ -2746,6 +3783,7 @@ function updateActionButtons() {
     : (nPresent > 0 ? `Select Present (${nPresent})` : 'Select Present');
 
   $('slot-run-health-btn').textContent = summary.actionable > 1 ? `Health All (${summary.actionable})` : 'Health';
+  $('slot-run-zeroed-btn').textContent = summary.actionable > 1 ? `Zeroed All (${summary.actionable})` : 'Zeroed';
   $('slot-run-speed-btn').textContent = summary.actionable > 1 ? `Speed Test All (${summary.actionable})` : 'Speed Test';
   $('slot-run-format-btn').textContent = summary.actionable > 1 ? `Format All (${summary.actionable})` : 'Format';
   if (monitorActive) {
@@ -2773,6 +3811,7 @@ function updateActionButtons() {
   hint.className = `slot-action-hint${reasonCls ? ' ' + reasonCls : ''}`;
 
   renderSlotsTable();
+  if (slotContextMenuState.open) updateSlotContextMenuUi();
 }
 
 function renderSlotActionPanel() {
@@ -2811,13 +3850,25 @@ function renderSlotActionPanel() {
 
   $('slot-action-title').textContent = summary.total > 1 ? `Primary Slot ${slotObj.slot}` : `Slot ${slotObj.slot}`;
   $('slot-action-presence').innerHTML = `<span class="badge badge-dim">${summary.total} selected · ${summary.actionable} actionable</span>`;
-  $('slot-action-device').innerHTML = d ? `<span class="dim">${escapeHtml(d.path)}</span>` : '<span class="dim">—</span>';
+  $('slot-action-device').innerHTML = d && d.path
+    ? `<span class="dim copyable-text" data-copyable="true">${escapeHtml(d.path)}</span>`
+    : '<span class="dim">—</span>';
   $('slot-action-health').innerHTML = d ? healthBadge(d.health) : '<span class="dim">—</span>';
   $('slot-action-fmt').innerHTML = d ? fmtBadge(d.fmt_status, d.zeroed) : '<span class="dim">—</span>';
   $('slot-action-zeroed').innerHTML = d ? zeroedBadge(d.zeroed) : '<span class="dim">—</span>';
-  $('slot-action-size').innerHTML = d && d.size ? escapeHtml(d.size) : '<span class="dim">—</span>';
-  $('slot-action-serial').innerHTML = d ? (escapeHtml(d.serial) || '<span class="dim">N/A</span>') : '<span class="dim">—</span>';
-  $('slot-action-model').innerHTML = d ? (escapeHtml(d.model) || '<span class="dim">unknown</span>') : '<span class="dim">—</span>';
+  $('slot-action-size').innerHTML = d && d.size
+    ? `<span class="copyable-text" data-copyable="true">${escapeHtml(d.size)}</span>`
+    : '<span class="dim">—</span>';
+  $('slot-action-serial').innerHTML = d
+    ? (d.serial
+      ? `<span class="copyable-text" data-copyable="true">${escapeHtml(d.serial)}</span>`
+      : '<span class="dim">N/A</span>')
+    : '<span class="dim">—</span>';
+  $('slot-action-model').innerHTML = d
+    ? (d.model
+      ? `<span class="copyable-text" data-copyable="true">${escapeHtml(d.model)}</span>`
+      : '<span class="dim">unknown</span>')
+    : '<span class="dim">—</span>';
 
   if (summary.total > 1) {
     $('slot-action-meta').textContent = `Primary detail is Slot ${slotObj.slot}. ${summary.actionable} selected disk(s) can run actions. Health known for ${knownHealth}/${summary.actionable}.`;
@@ -2851,6 +3902,11 @@ function stopMonitor(opts) {
   if (!options.keepLatest) {
     monitorState.latestByPath = {};
     monitorState.paths = [];
+  }
+  if (options.keepLatest) {
+    persistMonitorSession();
+  } else {
+    clearPersistedMonitorSession();
   }
   if (slotActionState.runningAction === 'monitor') {
     slotActionState.runningAction = null;
@@ -2903,6 +3959,7 @@ function startMonitorForPaths(paths) {
           delete monitorState.latestByPath[path];
         });
       }
+      persistMonitorSession();
       slotActionState.runningAction = 'monitor';
       if (wasActive) {
         if (addedPaths.length) {
@@ -2942,12 +3999,15 @@ function pollMonitor(manual) {
 
         const slotNum = Number.isInteger(Number(d.slot)) ? Number(d.slot) : getSlotByPath(path);
         if (Number.isInteger(slotNum)) {
+          const elapsedSecRaw = Number(d.elapsed);
+          const elapsedSec = Number.isFinite(elapsedSecRaw) ? Math.max(0, elapsedSecRaw) : null;
           slotActionState.formatResults[slotNum] = {
             state: d.status,
             detail: d.status === 'formatting'
               ? `${(Number(d.progress) || 0).toFixed(2)}%`
               : formatStateText(d.status),
             at: now,
+            durationSec: elapsedSec,
           };
         }
         if (TERMINAL_STATUSES.has(d.status)) {
@@ -2978,6 +4038,7 @@ function pollMonitor(manual) {
         monitorState.activePaths.delete(path);
       });
 
+      persistMonitorSession();
       renderR510Panel();
       renderSlotActionPanel();
 
@@ -3019,6 +4080,7 @@ function pollMonitor(manual) {
 function runHealthEnrichment(fromSlotAction) {
   const selectedPresent = fromSlotAction ? getSelectedPresentSlots(true) : [];
   if (fromSlotAction && !selectedPresent.length) return;
+  if (globalActionBusy || slotActionState.runningAction === 'health') return;
 
   if (fromSlotAction) {
     slotActionState.runningAction = 'health';
@@ -3038,7 +4100,11 @@ function runHealthEnrichment(fromSlotAction) {
     }
   });
 
-  postJSON('/api/health', {})
+  const selectedPaths = fromSlotAction ? selectedPresent.map(s => s.device.path) : [];
+  postJSON('/api/health', { devices: selectedPaths }, {
+    timeoutMs: HEALTH_SCAN_REQUEST_TIMEOUT_MS,
+    timeoutMessage: 'Health scan timed out waiting for server response.',
+  })
     .then(data => {
       if (data.error) throw new Error(data.error);
       const devices = Array.isArray(data.devices) ? data.devices : [];
@@ -3046,6 +4112,7 @@ function runHealthEnrichment(fromSlotAction) {
         if (d.path) healthByPath[d.path] = d.health;
       });
       healthLoadedAt = new Date();
+      persistHealthCache();
       slotsData = slotsData.map(applyHealthOverlay);
 
       if (fromSlotAction) {
@@ -3065,26 +4132,28 @@ function runHealthEnrichment(fromSlotAction) {
 
       const elapsed = typeof data.elapsed === 'number' ? fmtDuration(data.elapsed) : '0s';
       const warn = typeof data.rc === 'number' && data.rc !== 0 ? ` (exit ${data.rc})` : '';
-      renderSlotsSummary(`Health shown in ${elapsed} for ${devices.length} device(s).${warn}`);
+      const cacheNote = data.cached ? ` Cached (${Math.round(Number(data.cache_age || 0))}s old).` : '';
+      renderSlotsSummary(`Health shown in ${elapsed} for ${devices.length} device(s).${warn}${cacheNote}`);
       if (fromSlotAction) {
-        setSlotActionStatus(`✓ Health scan done in ${elapsed} for ${selectedPresent.length} selected disk(s).${warn}`, 'success');
-        showToast(`✓ Health scan done in ${elapsed} for ${selectedPresent.length} disk(s).${warn}`, 'success');
+        setSlotActionStatus(`✓ Health scan done in ${elapsed} for ${selectedPresent.length} selected disk(s).${warn}${cacheNote}`, 'success');
+        showToast(`✓ Health scan done in ${elapsed} for ${selectedPresent.length} disk(s).${warn}${cacheNote}`, 'success');
         recordAction('Health', 'success', selectedPresent.length, `done in ${elapsed}${warn}`);
       } else {
-        showToast(`✓ Health shown in ${elapsed} for ${devices.length} device(s).${warn}`, 'success');
+        showToast(`✓ Health shown in ${elapsed} for ${devices.length} device(s).${warn}${cacheNote}`, 'success');
         recordAction('Show Health', 'success', devices.length, `done in ${elapsed}${warn}`);
       }
       refreshSlotsQuietly();
     })
     .catch(err => {
+      const msg = friendlyApiError(err, 'health scan failed');
       if (fromSlotAction) {
-        setSlotActionStatus(`✗ ${err.message}`, 'error');
-        showToast(`✗ Health scan failed: ${err.message}`, 'error');
-        recordAction('Health', 'error', selectedPresent.length, err.message);
+        setSlotActionStatus(`✗ ${msg}`, 'error');
+        showToast(`✗ Health scan failed: ${msg}`, 'error');
+        recordAction('Health', 'error', selectedPresent.length, msg);
       } else {
-        setStatus('slots-status', `✗ ${err.message}`, 'error');
-        showToast(`✗ Health failed: ${err.message}`, 'error');
-        recordAction('Show Health', 'error', 0, err.message);
+        setStatus('slots-status', `✗ ${msg}`, 'error');
+        showToast(`✗ Health failed: ${msg}`, 'error');
+        recordAction('Show Health', 'error', 0, msg);
       }
     })
     .finally(() => {
@@ -3102,13 +4171,210 @@ function runHealthEnrichment(fromSlotAction) {
     });
 }
 
+function runZeroedForSelection() {
+  const selectedPresent = getSelectedPresentSlots(true);
+  if (!selectedPresent.length) return;
+  const paths = selectedPresent.map(s => s.device.path);
+
+  slotActionState.runningAction = 'zeroed';
+  setSlotActionStatus(`<span class="spin"></span> Scanning zeroed status for ${paths.length} disk(s)...`, 'info');
+  updateActionButtons();
+
+  startElapsedTimer(secs => {
+    setSlotActionStatus(`<span class="spin"></span> Scanning zeroed status for ${paths.length} disk(s)... (${secs}s)`, 'info');
+  });
+
+  postJSON('/api/zeroed/scan', { devices: paths }, {
+    timeoutMs: ZEROED_SCAN_REQUEST_TIMEOUT_MS,
+    timeoutMessage: 'Zeroed scan timed out waiting for server response.',
+  })
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      const results = Array.isArray(data.results) ? data.results : [];
+      const errors = Array.isArray(data.errors) ? data.errors : [];
+      const byPath = new Map(results.map(r => [String(r.device || ''), r]));
+
+      slotsData = slotsData.map(s => {
+        if (s.status !== 'PRESENT' || !s.device || !s.device.path) return s;
+        const row = byPath.get(s.device.path);
+        if (!row) return s;
+        const nextZeroed = row.zeroed === 'zero' || row.zeroed === 'data' ? row.zeroed : '';
+        return { ...s, device: { ...s.device, zeroed: nextZeroed } };
+      });
+
+      renderAll();
+
+      const nZero = results.filter(r => r.zeroed === 'zero').length;
+      const nData = results.filter(r => r.zeroed === 'data').length;
+      const nUnknown = results.length - nZero - nData;
+      const nBlocked = errors.filter(e => String(e && e.code || '') === 'format_active').length;
+      const nOtherErrors = Math.max(0, errors.length - nBlocked);
+      const notes = [];
+      if (nBlocked > 0) notes.push(`${nBlocked} skipped (format active)`);
+      if (nOtherErrors > 0) notes.push(`${nOtherErrors} missing/unavailable`);
+      const errorsNote = notes.length ? ` ${notes.join(', ')}.` : '';
+      const summary = `zeroed=${nZero} data=${nData} unknown=${Math.max(0, nUnknown)}.`;
+      if (results.length === 0 && nBlocked > 0 && nOtherErrors === 0) {
+        const msg = `ℹ Zeroed scan skipped: format active on ${nBlocked} disk(s).`;
+        setSlotActionStatus(msg, 'info');
+        showToast(msg, 'warn');
+        recordAction('Zeroed', 'info', nBlocked, 'skipped (format active)');
+      } else {
+        const cls = nBlocked > 0 || nOtherErrors > 0 ? 'info' : 'success';
+        setSlotActionStatus(`✓ Zeroed scan done for ${results.length} disk(s): ${summary}${errorsNote}`, cls);
+        showToast(`✓ Zeroed scan done for ${results.length} disk(s).${errorsNote}`, nBlocked > 0 || nOtherErrors > 0 ? 'warn' : 'success');
+        recordAction('Zeroed', nBlocked > 0 || nOtherErrors > 0 ? 'info' : 'success', results.length, `${summary}${errorsNote}`.trim());
+      }
+    })
+    .catch(err => {
+      const msg = friendlyApiError(err, 'zeroed scan failed');
+      setSlotActionStatus(`✗ ${msg}`, 'error');
+      showToast(`✗ Zeroed scan failed: ${msg}`, 'error');
+      recordAction('Zeroed', 'error', paths.length, msg);
+    })
+    .finally(() => {
+      stopElapsedTimer();
+      if (slotActionState.runningAction === 'zeroed') {
+        slotActionState.runningAction = null;
+      }
+      updateActionButtons();
+      renderSlotActionPanel();
+    });
+}
+
+function makeSpeedRunId() {
+  return `speed-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function buildSpeedPathInfoMap(selectedPresent) {
+  const byPath = new Map();
+  (selectedPresent || []).forEach(s => {
+    const device = s && s.device ? s.device : null;
+    const path = String(device && device.path || '').trim();
+    if (!path) return;
+    byPath.set(path, {
+      slot: Number.isInteger(Number(s.slot)) ? Number(s.slot) : '?',
+      serial: String(device.serial || '').trim() || '?',
+      model: String(device.model || '').trim() || '?',
+    });
+  });
+  return byPath;
+}
+
+function mergeSpeedRunRows(existingRows, updates) {
+  const byPath = new Map();
+  sortSpeedRows(existingRows).forEach(r => {
+    const path = String(r && r.device || '').trim();
+    if (!path) return;
+    byPath.set(path, { ...r, device: path });
+  });
+  (updates || []).forEach(r => {
+    const path = String(r && r.device || '').trim();
+    if (!path) return;
+    byPath.set(path, { ...r, device: path });
+  });
+  return sortSpeedRows(Array.from(byPath.values()));
+}
+
+function parseSpeedRunUpdatesFromLogLines(lines, runId, pathInfoByPath) {
+  const updatesByPath = new Map();
+  const list = Array.isArray(lines) ? lines : [];
+
+  list.forEach((line) => {
+    const pref = parseLogPrefix(line);
+    const message = String(pref.message || '');
+    if (!/^SPEEDTEST\b/.test(message)) return;
+    const logRunId = extractLogField(message, 'run');
+    if (!runId || !logRunId || logRunId !== runId) return;
+
+    const groups = parseSpeedReadGroups(message);
+    if (!groups.length) return;
+    groups.forEach(group => {
+      const path = String(group && group.dev || '').trim();
+      if (!path) return;
+      const info = pathInfoByPath.get(path);
+      if (!info) return;
+
+      const slotNum = Number(group.slot);
+      const slot = Number.isInteger(slotNum) ? slotNum : info.slot;
+      const parsedAt = pref.tsIso ? new Date(pref.tsIso) : null;
+      const atIso = parsedAt && Number.isFinite(parsedAt.getTime())
+        ? parsedAt.toISOString()
+        : new Date().toISOString();
+
+      updatesByPath.set(path, {
+        slot,
+        device: path,
+        serial: String(group.serial || '').trim() || info.serial || '?',
+        model: info.model || '?',
+        speed: String(group.read || '').trim() || '?',
+        at: atIso,
+      });
+    });
+  });
+
+  return sortSpeedRows(Array.from(updatesByPath.values()));
+}
+
 function runSpeedForSelection() {
   const selectedPresent = getSelectedPresentSlots(true);
   if (!selectedPresent.length) return;
   const paths = selectedPresent.map(s => s.device.path);
   const startedAt = new Date();
+  const runId = makeSpeedRunId();
+  const pathInfoByPath = buildSpeedPathInfoMap(selectedPresent);
+  let livePollId = null;
+  let livePollBusy = false;
+  let runActive = true;
+
+  function applyRowsToState(rows, running) {
+    if (!rows.length) return;
+    const current = slotActionState.speedLastRun;
+    if (!current || current.runId !== runId) return;
+    const mergedRows = mergeSpeedRunRows(current.rows || [], rows);
+    slotActionState.speedLastRun = {
+      ...current,
+      total: selectedPresent.length,
+      running: !!running,
+      rows: mergedRows,
+    };
+    mergedRows.forEach(row => {
+      if (!Number.isInteger(Number(row.slot))) return;
+      const atDate = row.at ? new Date(row.at) : new Date();
+      slotActionState.speedResultsBySlot[row.slot] = {
+        speed: row.speed || '?',
+        at: Number.isFinite(atDate.getTime()) ? atDate : new Date(),
+      };
+    });
+    renderSlotActionPanel();
+  }
+
+  function pollSpeedRunUpdates() {
+    if (!runActive || livePollBusy) return;
+    livePollBusy = true;
+    getJSON('/api/logs')
+      .then(data => {
+        if (!runActive) return;
+        const lines = Array.isArray(data.lines) ? data.lines : [];
+        const updates = parseSpeedRunUpdatesFromLogLines(lines, runId, pathInfoByPath);
+        if (updates.length) applyRowsToState(updates, true);
+      })
+      .catch(() => {})
+      .finally(() => {
+        livePollBusy = false;
+      });
+  }
 
   slotActionState.runningAction = 'speed';
+  slotActionState.speedLastRun = {
+    runId,
+    startedAt: startedAt.toISOString(),
+    finishedAt: null,
+    total: selectedPresent.length,
+    running: true,
+    rows: [],
+  };
+  renderSlotActionPanel();
   setSlotActionStatus(`<span class="spin"></span> Running speed test for ${paths.length} disk(s)...`, 'info');
   updateActionButtons();
 
@@ -3116,52 +4382,83 @@ function runSpeedForSelection() {
     setSlotActionStatus(`<span class="spin"></span> Running speed test for ${paths.length} disk(s)... (${secs}s)`, 'info');
   });
 
-  postJSON('/api/speedtest', { devices: paths })
+  pollSpeedRunUpdates();
+  livePollId = setInterval(pollSpeedRunUpdates, 2000);
+
+  postJSON('/api/speedtest', { devices: paths, run_id: runId })
     .then(data => {
+      runActive = false;
+      if (livePollId) {
+        clearInterval(livePollId);
+        livePollId = null;
+      }
       if (data.error) throw new Error(data.error);
       const results = Array.isArray(data.results) ? data.results : [];
       const byPath = new Map(results.map(r => [r.device, r]));
       const now = new Date();
       const batchRows = selectedPresent.map(s => {
         const r = byPath.get(s.device.path);
+        const info = pathInfoByPath.get(s.device.path) || {
+          slot: s.slot,
+          serial: String(s.device.serial || '').trim() || '?',
+          model: String(s.device.model || '').trim() || '?',
+        };
         const speed = r ? (r.speed || '?') : '?';
-        const slot = Number.isInteger(Number(r && r.slot)) ? Number(r.slot) : s.slot;
+        const slot = Number.isInteger(Number(r && r.slot)) ? Number(r.slot) : info.slot;
         return {
           slot,
           device: s.device.path,
+          serial: r && r.serial ? String(r.serial).trim() : info.serial,
+          model: r && r.model ? String(r.model).trim() : info.model,
           speed,
           at: now.toISOString(),
         };
-      }).sort((a, b) => {
-        const sa = Number.isInteger(Number(a.slot)) ? Number(a.slot) : 999;
-        const sb = Number.isInteger(Number(b.slot)) ? Number(b.slot) : 999;
-        return sa - sb;
       });
+      applyRowsToState(batchRows, true);
 
-      batchRows.forEach(row => {
-        slotActionState.speedResultsBySlot[row.slot] = {
-          speed: row.speed,
-          at: now,
-        };
-      });
-
+      const current = slotActionState.speedLastRun && slotActionState.speedLastRun.runId === runId
+        ? slotActionState.speedLastRun
+        : null;
+      const finalRows = sortSpeedRows(current && Array.isArray(current.rows) ? current.rows : batchRows);
       slotActionState.speedLastRun = {
-        startedAt: startedAt.toISOString(),
+        runId,
+        startedAt: current && current.startedAt ? current.startedAt : startedAt.toISOString(),
         finishedAt: now.toISOString(),
-        rows: batchRows,
+        total: selectedPresent.length,
+        running: false,
+        rows: finalRows,
       };
-
       renderSlotActionPanel();
       setSlotActionStatus(`✓ Speed test complete for ${selectedPresent.length} disk(s).`, 'success');
       showToast(`✓ Speed test complete for ${selectedPresent.length} disk(s).`, 'success');
       recordAction('Speed Test', 'success', selectedPresent.length, 'complete');
     })
     .catch(err => {
-      setSlotActionStatus(`✗ ${err.message}`, 'error');
-      showToast(`✗ Speed test failed: ${err.message}`, 'error');
-      recordAction('Speed Test', 'error', selectedPresent.length, err.message);
+      runActive = false;
+      if (livePollId) {
+        clearInterval(livePollId);
+        livePollId = null;
+      }
+      const current = slotActionState.speedLastRun;
+      if (current && current.runId === runId) {
+        slotActionState.speedLastRun = {
+          ...current,
+          running: false,
+          finishedAt: new Date().toISOString(),
+        };
+        renderSlotActionPanel();
+      }
+      const msg = friendlyApiError(err, 'speed test failed');
+      setSlotActionStatus(`✗ ${msg}`, 'error');
+      showToast(`✗ Speed test failed: ${msg}`, 'error');
+      recordAction('Speed Test', 'error', selectedPresent.length, msg);
     })
     .finally(() => {
+      runActive = false;
+      if (livePollId) {
+        clearInterval(livePollId);
+        livePollId = null;
+      }
       stopElapsedTimer();
       if (slotActionState.runningAction === 'speed') {
         slotActionState.runningAction = null;
@@ -3175,7 +4472,10 @@ function runFormatForSelection() {
   const selectedPresent = getSelectedPresentSlots(true);
   if (!selectedPresent.length) return;
 
-  const lines = selectedPresent.map(s => `Slot ${s.slot}: ${s.device.path}`).join('\n');
+  const lines = selectedPresent.map(s => {
+    const serial = String((s.device && s.device.serial) || '').trim();
+    return `Slot ${s.slot}: SN ${serial || 'N/A'}`;
+  }).join('\n');
 
   showConfirmDialog(
     `Format ${selectedPresent.length} Disk(s)?`,
@@ -3252,6 +4552,7 @@ function runFormatForSelection() {
 
 function loadSlotsData() {
   if (slotsLoading) return;
+  closeSlotContextMenu('refresh');
   slotsLoading = true;
   setGlobalSlotButtonsDisabled(true);
   $('slots-table-wrap').classList.add('hidden');
@@ -3266,6 +4567,7 @@ function loadSlotsData() {
   fetch('/api/missing').then(r => r.json())
     .then(data => {
       if (data.error) throw new Error(data.error);
+      restoreHealthCacheIfNeeded();
       slotsData = normalizeSlots(data.slots);
       const validSlots = new Set(slotsData.map(s => s.slot));
       Array.from(selectedSlots).forEach(slot => {
@@ -3273,6 +4575,7 @@ function loadSlotsData() {
       });
       ensurePrimarySlot();
       renderAll();
+      restoreMonitorSessionIfNeeded();
       renderSlotsSummary();
       refreshFormatHistoryFromLogs().finally(() => {
         renderSlotActionPanel();
@@ -3396,6 +4699,7 @@ $('slots-export-excel-btn').addEventListener('click', () => {
 });
 
 $('slot-run-health-btn').addEventListener('click', () => runHealthEnrichment(true));
+$('slot-run-zeroed-btn').addEventListener('click', runZeroedForSelection);
 $('slot-run-speed-btn').addEventListener('click', runSpeedForSelection);
 $('slot-run-format-btn').addEventListener('click', runFormatForSelection);
 $('slot-run-monitor-btn').addEventListener('click', startMonitorForSelection);
@@ -3404,6 +4708,7 @@ $('slot-clear-selection-btn').addEventListener('click', clearSelection);
 $('slot-monitor-pause-btn').addEventListener('click', () => {
   if (!monitorState.active) return;
   monitorState.paused = !monitorState.paused;
+  persistMonitorSession();
   renderMonitorState();
   setSlotActionStatus(
     monitorState.paused
@@ -3433,12 +4738,14 @@ $('slot-monitor-stop-btn').addEventListener('click', () => {
 
 $('slot-monitor-int-minus').addEventListener('click', () => {
   monitorState.interval = Math.max(1, monitorState.interval - 1);
+  persistMonitorSession();
   renderMonitorState();
   restartMonitorTimer();
 });
 
 $('slot-monitor-int-plus').addEventListener('click', () => {
   monitorState.interval = Math.min(60, monitorState.interval + 1);
+  persistMonitorSession();
   renderMonitorState();
   restartMonitorTimer();
 });
@@ -3447,8 +4754,29 @@ $('slot-action-panel-toggle').addEventListener('click', () => toggleSectionColla
 $('slot-speed-run-toggle').addEventListener('click', () => toggleSectionCollapse('speedRun'));
 $('slot-monitor-toggle').addEventListener('click', () => toggleSectionCollapse('monitor'));
 
+$('slot-context-menu').addEventListener('click', e => {
+  const btn = e.target.closest('.slot-context-menu-item[data-action]');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  runSlotActionFromMenu(btn.dataset.action);
+});
+
+$('slot-context-menu').addEventListener('contextmenu', e => {
+  e.preventDefault();
+});
+
+$('slots-grid').addEventListener('contextmenu', e => {
+  if (hasNonEmptyTextSelectionIn($('slots-grid'))) return;
+  const bay = e.target.closest('.r510-bay');
+  if (!bay) return;
+  const slot = Number(bay.dataset.slot);
+  openSlotContextMenu(e, slot, 'grid');
+});
+
 $('slots-grid').addEventListener('click', e => {
   if (e.button !== 0) return;
+  if (hasNonEmptyTextSelectionIn($('slots-grid'))) return;
   const bay = e.target.closest('.r510-bay');
   if (!bay) return;
   const slot = Number(bay.dataset.slot);
@@ -3471,11 +4799,20 @@ $('slots-tbody').addEventListener('click', e => {
   }
 
   if (e.target.closest('input,button,label,a')) return;
+  if (hasNonEmptyTextSelectionIn($('slots-tbody'))) return;
 
   const row = e.target.closest('tr[data-slot]');
   if (!row) return;
   const slot = Number(row.dataset.slot);
   toggleSlotSelection(slot);
+});
+
+$('slots-tbody').addEventListener('contextmenu', e => {
+  if (hasNonEmptyTextSelectionIn($('slots-tbody'))) return;
+  const row = e.target.closest('tr[data-slot]');
+  if (!row) return;
+  const slot = Number(row.dataset.slot);
+  openSlotContextMenu(e, slot, 'table');
 });
 
 $('slots-tbody').addEventListener('change', e => {
@@ -3530,6 +4867,17 @@ $('slots-select-all').addEventListener('change', e => {
 $('nav-tab-slots').addEventListener('click', () => setMainTab(TAB_SLOTS));
 $('nav-tab-logs').addEventListener('click', () => setMainTab(TAB_LOGS));
 $('logs-refresh-btn').addEventListener('click', () => loadLogs(true));
+$('logs-load-older-btn').addEventListener('click', () => loadOlderLogs());
+$('logs-delete-selected-btn').addEventListener('click', () => deleteSelectedLogs());
+$('logs-select-all').addEventListener('change', e => {
+  const checked = !!e.target.checked;
+  if (!checked) {
+    logsSelectedRowIds = new Set();
+  } else {
+    logsSelectedRowIds = new Set(logsRowLinesById.keys());
+  }
+  rerenderLogsFromState(false);
+});
 $('logs-event-filter').addEventListener('change', () => {
   logsExpandedRaw = new Set();
   applyLogsFiltersFromInputs(true);
@@ -3556,6 +4904,32 @@ $('logs-table-body').addEventListener('click', e => {
   if (logsExpandedRaw.has(rowId)) logsExpandedRaw.delete(rowId);
   else logsExpandedRaw.add(rowId);
   rerenderLogsFromState(false);
+});
+$('logs-table-body').addEventListener('change', e => {
+  const input = e.target.closest('.logs-row-select');
+  if (!input) return;
+  const rowId = String(input.dataset.rowId || '');
+  if (!rowId) return;
+  if (input.checked) logsSelectedRowIds.add(rowId);
+  else logsSelectedRowIds.delete(rowId);
+  syncLogsSelectionUI();
+});
+
+document.addEventListener('pointerdown', e => {
+  if (!slotContextMenuState.open) return;
+  const menu = $('slot-context-menu');
+  if (menu && menu.contains(e.target)) return;
+  closeSlotContextMenu('outside');
+}, true);
+
+document.addEventListener('scroll', () => {
+  if (!slotContextMenuState.open) return;
+  closeSlotContextMenu('scroll');
+}, true);
+
+window.addEventListener('resize', () => {
+  if (!slotContextMenuState.open) return;
+  closeSlotContextMenu('resize');
 });
 
 document.addEventListener('keydown', handleGlobalHotkeys);

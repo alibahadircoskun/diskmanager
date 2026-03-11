@@ -173,6 +173,7 @@ sudo systemctl status diskmanager-web
 
 - Bays support multi-select.
 - Click a bay to toggle it in/out of selection.
+- Right-click a bay or slots table row to open a quick actions menu (`Health`, `Zeroed`, `Speed`, `Format`, `Monitor`) for the current multi-selection.
 - Slots table rows also support multi-select via click/checkbox, and each row has direct `Health`, `Speed`, `Format`, and `Monitor` action buttons.
 - Quick selection shortcuts are available: `Select Present`, `Invert`, and `Clear Selection`.
 - Keyboard shortcuts: `R` refresh, `H` show health, `P` select present, `I` invert, `C` clear selection, `A` toggle table select-all.
@@ -188,7 +189,9 @@ sudo systemctl status diskmanager-web
 
 - Top navigation includes `Slots` and `Logs`.
 - `Logs` loads on first tab open and refreshes only when `Refresh Logs` is clicked.
-- The viewer shows the last 500 lines (oldest-to-newest within that window).
+- The viewer loads the latest 500 lines first (oldest-to-newest within that window).
+- Use `Load Older Logs` to page backward in additional 500-line chunks.
+- Repeated burst events (same event+level+second) are grouped into one expandable row.
 - The source path is runtime-resolved from `disk.LOGFILE`, and the UI shows the absolute source path plus last refresh timestamp.
 
 ## Command Notes

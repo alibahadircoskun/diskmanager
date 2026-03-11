@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import html
+import json
 import logging
 import logging.handlers
 import os
@@ -16,6 +18,7 @@ import signal
 import subprocess
 import sys
 import termios
+import threading
 import time
 import tty
 from pathlib import Path
@@ -40,6 +43,12 @@ PORT_TO_SLOT = dict(zip(PORTS, SLOTS))
 
 HDSENTINEL = "/root/HDSentinel"
 LOGFILE    = str(Path(__file__).resolve().parent / "diskops.log")
+INVENTORY_JSON = Path(__file__).resolve().parent / "components_2026-03-11.json"
+_DISK_INVENTORY_CATEGORIES = {"sas disk", "sata disk", "ssd disk", "nvme ssd"}
+_inventory_cache_lock = threading.Lock()
+_inventory_cache_mtime: float | None = None
+_inventory_cache: dict[str, str] = {}
+_inventory_warning_key: str | None = None
 
 _log = logging.getLogger("diskops")
 _log.setLevel(logging.INFO)
@@ -173,6 +182,109 @@ def discover() -> list[Device]:
     devices.sort(key=lambda d: (d.slot if isinstance(d.slot, int) else 999))
     return devices
 
+def _norm_inventory_serial(value: str) -> str:
+    return value.strip().upper()
+
+def _warn_inventory_once(key: str, msg: str, *args: object) -> None:
+    global _inventory_warning_key
+    with _inventory_cache_lock:
+        if _inventory_warning_key == key:
+            return
+        _inventory_warning_key = key
+    _log.warning(msg, *args)
+
+def _load_inventory_name_map() -> dict[str, str]:
+    global _inventory_cache_mtime, _inventory_cache, _inventory_warning_key
+    try:
+        mtime = INVENTORY_JSON.stat().st_mtime
+    except OSError as e:
+        with _inventory_cache_lock:
+            _inventory_cache = {}
+            _inventory_cache_mtime = None
+        _warn_inventory_once(
+            f"unavailable:{type(e).__name__}:{INVENTORY_JSON}",
+            "Inventory mapping unavailable at %s: %s",
+            INVENTORY_JSON,
+            e,
+        )
+        return {}
+
+    with _inventory_cache_lock:
+        if _inventory_cache_mtime == mtime:
+            return _inventory_cache
+
+    try:
+        raw = json.loads(INVENTORY_JSON.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        with _inventory_cache_lock:
+            _inventory_cache = {}
+            _inventory_cache_mtime = None
+        _warn_inventory_once(
+            f"invalid:{type(e).__name__}:{INVENTORY_JSON}",
+            "Inventory mapping could not be loaded from %s: %s",
+            INVENTORY_JSON,
+            e,
+        )
+        return {}
+
+    if not isinstance(raw, list):
+        with _inventory_cache_lock:
+            _inventory_cache = {}
+            _inventory_cache_mtime = None
+        _warn_inventory_once(
+            f"invalid-structure:{INVENTORY_JSON}",
+            "Inventory mapping file %s has invalid structure (expected list).",
+            INVENTORY_JSON,
+        )
+        return {}
+
+    name_map: dict[str, str] = {}
+    duplicate_serials: set[str] = set()
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        category = str(item.get("Category", "")).strip().lower()
+        if category not in _DISK_INVENTORY_CATEGORIES:
+            continue
+        serial = _norm_inventory_serial(str(item.get("Serial", "")))
+        if not serial:
+            continue
+        name = html.unescape(str(item.get("Name", ""))).strip()
+        if not name:
+            continue
+        existing = name_map.get(serial)
+        if existing is None:
+            name_map[serial] = name
+        elif existing != name:
+            duplicate_serials.add(serial)
+
+    for serial in sorted(duplicate_serials):
+        _log.warning(
+            "Inventory mapping duplicate serial %s in disk categories; keeping first name '%s'.",
+            serial,
+            name_map[serial],
+        )
+
+    with _inventory_cache_lock:
+        _inventory_cache = name_map
+        _inventory_cache_mtime = mtime
+        _inventory_warning_key = None
+        return _inventory_cache
+
+def _apply_inventory_model_names(devices: list[Device]) -> None:
+    if not devices:
+        return
+    name_map = _load_inventory_name_map()
+    if not name_map:
+        return
+    for dev in devices:
+        serial = _norm_inventory_serial(dev.serial)
+        if not serial:
+            continue
+        mapped = name_map.get(serial)
+        if mapped:
+            dev.model = mapped
+
 def enrich_lsblk(devices: list[Device]) -> None:
     paths = [d.path for d in devices]
     r = subprocess.run(
@@ -196,6 +308,7 @@ def enrich_lsblk(devices: list[Device]) -> None:
                 m = re.search(r"Serial number:\s*(\S+)", r2.stdout, re.I)
                 if m:
                     dev.serial = m.group(1)
+    _apply_inventory_model_names(devices)
 
 def _zero_sample_positions(total_bytes: int, sample_size: int = 4096, sample_count: int = 5) -> list[int]:
     """Return evenly distributed sample start offsets across the device."""
@@ -649,6 +762,7 @@ def cmd_progress(args: argparse.Namespace) -> bool:
                 d.model = parts[0] if parts else ""
                 d.serial = parts[1] if len(parts) > 1 else ""
                 selected.append(d)
+        _apply_inventory_model_names(selected)
     else:
         print_table(devices, show_health=False)
         selected = pick_devices(devices, "Enter device numbers to monitor (space-separated, 'all', or Enter to cancel): ")
@@ -712,14 +826,12 @@ def _poll(state: DevState) -> None:
 
     # Detect format startup timeout: still waiting after 30s with no progress ever seen.
     # Some enclosures stop reporting progress even when format has completed.
-    # In that case, trust the on-disk format/zero state instead of forcing FAILED.
+    # In that case, trust on-disk format status instead of forcing FAILED.
     if state.status == "waiting" and not state.ever_started and state.elapsed > 30:
         dev = Device(state.path, "")
         enrich_fmt_status([dev])
-        enrich_zeroed_status([dev])
         state.fmt_status = dev.fmt_status
-        state.zeroed = dev.zeroed
-        if state.fmt_status == "512" and state.zeroed != "data":
+        if state.fmt_status == "512":
             state.status = "done_nostart"
             state.ever_started = True
             state.progress = 100.0
@@ -728,7 +840,7 @@ def _poll(state: DevState) -> None:
         else:
             state.status = "failed"
             log(f"FORMAT_START_FAILED slot={state.slot} dev={state.path} model={state.model} serial={state.serial}"
-                f" fmt={state.fmt_status or '?'} zeroed={state.zeroed or '?'}")
+                f" fmt={state.fmt_status or '?'}")
         return
 
     poll_dev = state.sg_path
