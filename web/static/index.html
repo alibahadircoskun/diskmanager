@@ -4104,13 +4104,6 @@ function runHealthEnrichment(fromSlotAction) {
   });
 
   const selectedPaths = selectedPresent.map(s => s.device.path);
-  const selectedPathSet = new Set(selectedPaths);
-  // Clear health for unselected disks so only selected ones show data
-  for (const path in healthByPath) {
-    if (!selectedPathSet.has(path)) {
-      delete healthByPath[path];
-    }
-  }
   postJSON('/api/health', { devices: selectedPaths }, {
     timeoutMs: HEALTH_SCAN_REQUEST_TIMEOUT_MS,
     timeoutMessage: 'Health scan timed out waiting for server response.',
@@ -4145,8 +4138,8 @@ function runHealthEnrichment(fromSlotAction) {
       const cacheNote = data.cached ? ` Cached (${Math.round(Number(data.cache_age || 0))}s old).` : '';
       renderSlotsSummary(`Health shown in ${elapsed} for ${devices.length} device(s).${warn}${cacheNote}`);
       if (fromSlotAction) {
-        setSlotActionStatus(`✓ Health scan done in ${elapsed} for ${selectedPresent.length} selected disk(s).${warn}${cacheNote}`, 'success');
-        showToast(`✓ Health scan done in ${elapsed} for ${selectedPresent.length} disk(s).${warn}${cacheNote}`, 'success');
+        setSlotActionStatus(`✓ Health scan done in ${elapsed} for ${devices.length} device(s).${warn}${cacheNote}`, 'success');
+        showToast(`✓ Health scan done in ${elapsed} for ${devices.length} device(s).${warn}${cacheNote}`, 'success');
         recordAction('Health', 'success', selectedPresent.length, `done in ${elapsed}${warn}`);
       } else {
         showToast(`✓ Health shown in ${elapsed} for ${devices.length} device(s).${warn}${cacheNote}`, 'success');
