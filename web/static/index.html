@@ -4081,8 +4081,8 @@ function pollMonitor(manual) {
 }
 
 function runHealthEnrichment(fromSlotAction) {
-  const selectedPresent = fromSlotAction ? getSelectedPresentSlots(true) : [];
-  if (fromSlotAction && !selectedPresent.length) return;
+  const selectedPresent = getSelectedPresentSlots(true);
+  if (!selectedPresent.length) return;
   if (globalActionBusy || slotActionState.runningAction === 'health') return;
 
   if (fromSlotAction) {
@@ -4103,7 +4103,14 @@ function runHealthEnrichment(fromSlotAction) {
     }
   });
 
-  const selectedPaths = fromSlotAction ? selectedPresent.map(s => s.device.path) : [];
+  const selectedPaths = selectedPresent.map(s => s.device.path);
+  const selectedPathSet = new Set(selectedPaths);
+  // Clear health for unselected disks so only selected ones show data
+  for (const path in healthByPath) {
+    if (!selectedPathSet.has(path)) {
+      delete healthByPath[path];
+    }
+  }
   postJSON('/api/health', { devices: selectedPaths }, {
     timeoutMs: HEALTH_SCAN_REQUEST_TIMEOUT_MS,
     timeoutMessage: 'Health scan timed out waiting for server response.',
