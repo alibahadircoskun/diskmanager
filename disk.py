@@ -38,8 +38,15 @@ PORTS = [
     "/dev/disk/by-path/pci-0000:02:00.0-sas-exp0x500065b36789abff-phy17-lun-0",
 ]
 
-SLOTS = [8, 5, 2, 11, 1, 4, 7, 10, 0, 3, 6, 9]
+SLOTS = [2, 5, 8, 11, 1, 4, 7, 10, 0, 3, 6, 9]
 PORT_TO_SLOT = dict(zip(PORTS, SLOTS))
+PORT_TO_PHY = {
+    port: int(m.group(1))
+    for port in PORTS
+    if (m := re.search(r"-phy(\d+)-", port))
+}
+PHY_TO_PORT = {phy: port for port, phy in PORT_TO_PHY.items()}
+PHY_TO_SLOT = {phy: PORT_TO_SLOT[port] for port, phy in PORT_TO_PHY.items()}
 
 HDSENTINEL = "/root/HDSentinel"
 LOGFILE    = str(Path(__file__).resolve().parent / "diskops.log")
@@ -169,16 +176,73 @@ class Device:
     def __str__(self) -> str:
         return self.path
 
-def discover() -> list[Device]:
-    seen: set[str] = set()
+def _settle_udev(timeout: int = 2) -> None:
+    udevadm = shutil.which("udevadm")
+    if not udevadm:
+        return
+    try:
+        subprocess.run(
+            [udevadm, "settle", f"--timeout={timeout}"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=timeout + 1,
+        )
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+def _discover_from_sysfs() -> list[Device]:
     devices: list[Device] = []
-    for port in PORTS:
-        p = Path(port)
-        if p.is_block_device():
-            real = str(p.resolve())
-            if real not in seen:
-                seen.add(real)
-                devices.append(Device(real, port))
+    seen: set[str] = set()
+    sas_port_root = Path("/sys/class/sas_port")
+    if not sas_port_root.exists():
+        return devices
+
+    for port_link in sorted(sas_port_root.glob("port-0:0:*")):
+        try:
+            port_dir = port_link.resolve()
+        except OSError:
+            continue
+
+        phys = []
+        for phy_dir in port_dir.glob("phy-0:0:*"):
+            tail = phy_dir.name.rsplit(":", 1)[-1]
+            if not tail.isdigit():
+                continue
+            phy = int(tail)
+            if phy in PHY_TO_SLOT:
+                phys.append(phy)
+
+        if len(phys) != 1:
+            continue
+
+        phy = phys[0]
+        block_nodes = sorted(port_dir.glob("end_device-*/target*/*/block/*"))
+        if not block_nodes:
+            continue
+
+        for block in block_nodes:
+            dev_path = f"/dev/{block.name}"
+            if not Path(dev_path).is_block_device() or dev_path in seen:
+                continue
+            seen.add(dev_path)
+            devices.append(Device(dev_path, PHY_TO_PORT[phy]))
+            break
+
+    return devices
+
+def discover() -> list[Device]:
+    _settle_udev()
+    devices = _discover_from_sysfs()
+    if not devices:
+        seen: set[str] = set()
+        for port in PORTS:
+            p = Path(port)
+            if p.is_block_device():
+                real = str(p.resolve())
+                if real not in seen:
+                    seen.add(real)
+                    devices.append(Device(real, port))
     devices.sort(key=lambda d: (d.slot if isinstance(d.slot, int) else 999))
     return devices
 
@@ -641,7 +705,6 @@ def cmd_health(args: argparse.Namespace) -> bool:
 
     enrich_lsblk(devices)
     enrich_fmt_status(devices)
-    enrich_zeroed_status(devices)
 
     # Use stable PHY by-path symlinks for HDSentinel device targeting.
     devlist = ",".join(d.port for d in devices)
@@ -681,7 +744,6 @@ def cmd_format(args: argparse.Namespace) -> bool:
 
     enrich_lsblk(devices)
     enrich_fmt_status(devices)
-    enrich_zeroed_status(devices)
     print_table(devices, show_health=False)
 
     selected = pick_devices(devices, "Enter device numbers to format (space-separated, 'all', or Enter to cancel): ")
@@ -746,7 +808,6 @@ def cmd_progress(args: argparse.Namespace) -> bool:
         return True
     enrich_lsblk(devices)
     enrich_fmt_status(devices)
-    enrich_zeroed_status(devices)
 
     if args.devices:
         by_path = {d.path: d for d in devices}
@@ -813,6 +874,10 @@ class DevState:
     @property
     def elapsed(self) -> float:
         return time.monotonic() - self.start
+
+
+def _all_terminal(states: list[DevState]) -> bool:
+    return all(s.status in ("done", "done_nostart", "failed", "lost") for s in states)
 
 def _poll(state: DevState) -> None:
     if state.status in ("done", "done_nostart", "failed", "lost"):
@@ -1040,10 +1105,13 @@ def _progress_ui(devices: list[Device]) -> None:
                 for s in states:
                     _poll(s)
 
-            if all(s.status in ("done", "done_nostart", "failed", "lost") for s in states) and any(s.ever_started for s in states):
+            if _all_terminal(states):
                 n_f = sum(1 for s in states if s.status in ("failed", "lost"))
                 if n_f:
-                    draw(f"  Finished — {n_f} disk(s) FAILED.  Press q to exit.", footer_green=False)
+                    if any(s.ever_started for s in states):
+                        draw(f"  Finished — {n_f} disk(s) FAILED.  Press q to exit.", footer_green=False)
+                    else:
+                        draw(f"  No active format detected — {n_f} disk(s) not running.  Press q to exit.", footer_green=False)
                 else:
                     draw("  All formatting complete.  Press q to exit.")
                 while True:
@@ -1197,7 +1265,6 @@ def cmd_missing(args: argparse.Namespace) -> bool:
     devices = discover()
     enrich_lsblk(devices)
     enrich_fmt_status(devices)
-    enrich_zeroed_status(devices)
     by_port = {d.port: d for d in devices}
     ordered_ports = sorted(PORTS, key=lambda p: PORT_TO_SLOT.get(p, 999))
 

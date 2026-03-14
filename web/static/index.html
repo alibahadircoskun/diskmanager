@@ -4001,13 +4001,16 @@ function pollMonitor(manual) {
         if (Number.isInteger(slotNum)) {
           const elapsedSecRaw = Number(d.elapsed);
           const elapsedSec = Number.isFinite(elapsedSecRaw) ? Math.max(0, elapsedSecRaw) : null;
+          const existing = slotActionState.formatResults[slotNum] || {};
+          const isTerminal = TERMINAL_STATUSES.has(d.status);
           slotActionState.formatResults[slotNum] = {
             state: d.status,
             detail: d.status === 'formatting'
               ? `${(Number(d.progress) || 0).toFixed(2)}%`
               : formatStateText(d.status),
             at: now,
-            durationSec: elapsedSec,
+            // Preserve existing durationSec for terminal states or if it's already set
+            durationSec: (isTerminal && Number.isFinite(existing.durationSec)) ? existing.durationSec : elapsedSec,
           };
         }
         if (TERMINAL_STATUSES.has(d.status)) {
